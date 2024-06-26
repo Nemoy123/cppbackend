@@ -59,7 +59,7 @@ StringResponse HandleRequest(StringRequest&& req) {
             };
         std::string target =   std::string(req.target());
         if (target.at(0) == '/') { target.erase(target.begin()); }     
-        std::string res = std::string("<strong>Hello, ") + target +  "</strong>"s;
+        std::string res = std::string("Hello, ") + target;
         // Здесь можно обработать запрос и сформировать ответ, но пока всегда отвечаем: Hello
         return text_response(http::status::ok, res );
     }
@@ -74,7 +74,7 @@ StringResponse HandleRequest(StringRequest&& req) {
             return MakeStringResponse(status, text, req.version(), req.keep_alive());
             };
         
-        return text_response(http::status::method_not_allowed, "<strong>Invalid method<strong>"sv);
+        return text_response(http::status::method_not_allowed, "Invalid method"sv);
     }
 }
 
