@@ -1,5 +1,6 @@
 #include "json_loader.h"
 #include <sstream>
+#include <fstream>
 #include <iostream>
 #include <boost/json/src.hpp>
 
@@ -80,9 +81,21 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
     // Распарсить строку как JSON, используя boost::json::parse
     // Загрузить модель игры из файла
     model::Game game;
-    std::stringstream ssjson(json_path);
-    std::cout << ssjson.str();
-    auto value = json::parse(ssjson.str());
+    std::string temp{};
+    std::string res{};
+    std::fstream in(json_path);
+    
+    if (in.is_open())
+    {
+        while (std::getline(in, temp))
+        {
+            res += temp;
+        }
+    }
+    in.close(); 
+
+   
+    auto value = json::parse(res);
     //model::Map(Id id, std::string name)
     if (!value.is_object()) { throw ("Input Error JSON bad format");}
     if (value.as_object().find ("maps") == value.as_object().end()) {throw ("Input Error JSON no maps");} 
@@ -91,7 +104,7 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
     auto& vect_maps = value.as_object().at ("maps").as_array();
     for (const auto& gamemap : vect_maps) {
         if (!gamemap.is_object()) {throw ("Input Error JSON");}
-        std::string id = 0;
+        std::string id{};
         std::string name{};
         json::array roads {};
         json::array buildings {};

@@ -59,7 +59,9 @@ public:
                 }
                 std::string res = json::serialize(arr);
                 //send = text_response(http::status::ok, res );
-                boost::beast::bind_front_handler(send, http::status::ok, res);
+                //boost::beast::bind_front_handler(send, text_response(http::status::ok, res));
+                send(text_response(http::status::ok, res));
+
             }
             else if (target.starts_with ("/api/v1/maps/") && target.size() > 13) {
                 std::string map_name {target.substr(13)};
@@ -72,13 +74,15 @@ public:
                     val["roads"] = json_loader::GetJsonRoads(*ptr_map);
                     val["buildings"] = json_loader::GetJsonBuildings(*ptr_map);
                     val["offices"] = json_loader::GetJsonOffices(*ptr_map);
-                    boost::beast::bind_front_handler(send, http::status::ok, json::serialize(val));
+                    //boost::beast::bind_front_handler(send, text_response(http::status::ok, json::serialize(val)));
+                    send(text_response(http::status::ok, json::serialize(val)));
                 }
                 else {
                     boost::json::object val;
                     val["code"] = "mapNotFound";
                     val["message"] = "Map not found";
-                    boost::beast::bind_front_handler(send, http::status::not_found, json::serialize(val));
+                    //boost::beast::bind_front_handler(send, text_response(http::status::not_found, json::serialize(val)));
+                    send(text_response(http::status::not_found, json::serialize(val)));
                 }
 
             }
@@ -86,7 +90,8 @@ public:
                 boost::json::object val;
                 val["code"] = "badRequest";
                 val["message"] = "Bad request";
-                boost::beast::bind_front_handler(send, http::status::bad_request, json::serialize(val));
+                //boost::beast::bind_front_handler(send, text_response(http::status::bad_request, json::serialize(val)));
+                send(text_response(http::status::bad_request, json::serialize(val)));
             }
         }
 
