@@ -54,7 +54,11 @@ public:
                 json::array arr;
                 for (const auto& gamemap : game_.GetMaps()) {
                     boost::json::object obj;
-                    obj[*gamemap.GetId()] = gamemap.GetName();
+                    
+                    obj[boost::json::string {"id"}] = boost::json::string {*gamemap.GetId()};
+                    obj[boost::json::string {"name"}] = gamemap.GetName();
+                    
+                    //obj[*gamemap.GetId()] = gamemap.GetName();
                     arr.push_back(obj);
                 }
                 std::string res = json::serialize(arr);
