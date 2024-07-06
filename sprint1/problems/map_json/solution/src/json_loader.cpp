@@ -64,8 +64,10 @@ std::vector<Office> ParseOffices (const json::array& arr) {
         for (const auto& [key, val]:off.as_object()) {
             if (key == "x") { x = val.as_int64();} 
             if (key == "y") { y = val.as_int64();}
-            if (key == "offsetx") { offsetx = val.as_int64();}
-            if (key == "offsety") { offsety = val.as_int64();}
+            if (key == "offsetX") { 
+                offsetx = val.as_int64();
+                }
+            if (key == "offsetY") { offsety = val.as_int64();}
             if (key == "id") { id = val.as_string();} 
         }
 
