@@ -36,17 +36,21 @@ public:
     RequestHandler& operator=(const RequestHandler&) = delete;
 
 
-    // Создаёт StringResponse с заданными параметрами
+    
+        // Создаёт StringResponse с заданными параметрами
     static StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version,
                                     bool keep_alive,
                                     std::string_view content_type = ContentType::JSON) {
         StringResponse response(status, http_version);
+       
         response.set(http::field::content_type, content_type);
         response.body() = body;
         response.content_length(body.size());
         response.keep_alive(keep_alive);
         return response;
     }
+
+    
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
@@ -55,6 +59,9 @@ public:
         if (req.method_string() == "GET") {
             const auto text_response = [&](http::status status, std::string_view text) {
                 return MakeStringResponse(status, text, req.version(), req.keep_alive());
+            };
+            const auto text_response_with_type= [&](http::status status, std::string_view text, std::string_view con_type) {
+                return MakeStringResponse(status, text, req.version(), req.keep_alive(), con_type);
             };
             std::string target = std::string(req.target());
             
@@ -94,6 +101,10 @@ public:
             }
             else if (target.substr(0,4) != "/api") {
                 auto temp = EncodeURL(target);
+                if (temp.has_value() && !IsSubPath(temp.value())) {
+                    send(text_response_with_type(http::status::bad_request, "Bad request", ContentType::PLAIN_TEXT));
+                    return;
+                }
                 if (temp.has_value() && IsSubPath(temp.value())) {
                     using namespace http;
                     std::string req_url = temp.value();
@@ -107,14 +118,8 @@ public:
                     file_body::value_type file;
 
                     if (sys::error_code ec; file.open(req_url.data(), beast::file_mode::read, ec), ec) {
-                        //std::cout << "Failed to open file "sv << req_url << std::endl;
-                        
-                        StringResponse response(http::status::not_found, req.version());
-                        response.set(http::field::content_type, ContentType::PLAIN_TEXT);
-                        response.body() = "File NOT found";
-                        response.content_length(response.body().size());
-                        response.keep_alive(req.keep_alive());
-                        send(response);
+
+                        send(text_response_with_type(http::status::not_found, "File NOT found", ContentType::PLAIN_TEXT));
                         return;
                     }
 
