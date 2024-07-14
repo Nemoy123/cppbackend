@@ -115,8 +115,12 @@ std::string Logger::GetFileTimeStamp() const {
        now = manual_ts_.value();
     }
     const auto t_c = std::chrono::system_clock::to_time_t(now);
-    auto name = std::put_time(std::localtime(&t_c), "%Y %m %d");
     std::stringstream ss;
+    auto name = std::put_time(std::localtime(&t_c), "%Y");
+    ss << name << "_";
+    name = std::put_time(std::localtime(&t_c), "%m");
+    ss << name << "_";
+    name = std::put_time(std::localtime(&t_c), "%d");
     ss << name;
     return ss.str();
 }
