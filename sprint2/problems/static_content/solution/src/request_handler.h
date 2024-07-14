@@ -101,15 +101,24 @@ public:
             }
             else if (target.substr(0,4) != "/api") {
                 auto temp = EncodeURL(target);
-                fs::path n_path = files_path_;
-                n_path += temp.value();
-                bool sub_path = IsSubPath(n_path);
-
-                if (temp.has_value() && !sub_path) {
+                if (!temp.has_value()) {
                     send(text_response_with_type(http::status::bad_request, "Bad request", ContentType::PLAIN_TEXT));
                     return;
                 }
-                if (temp.has_value() && sub_path) {
+
+                fs::path n_path = files_path_;
+                n_path += temp.value();
+                bool sub_path = IsSubPath(n_path);
+                if (!sub_path) {
+                    send(text_response_with_type(http::status::bad_request, "Bad request", ContentType::PLAIN_TEXT));
+                    return;
+                }
+
+                if (temp.value().back() == '/') {
+                    n_path += std::string {"index.html"};
+                }
+
+                //else if (temp.has_value() && sub_path) {
                     using namespace http;
                     std::string req_url = n_path;
                     response <file_body> res;
@@ -131,9 +140,10 @@ public:
                     // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
                     // в зависимости от свойств тела сообщения
                     res.prepare_payload();
+                    //res.set_target_impl(req_url);
                     send(res);
                     return;
-                }
+                //}
                 
                 
             }
