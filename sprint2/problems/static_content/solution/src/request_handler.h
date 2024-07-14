@@ -101,13 +101,17 @@ public:
             }
             else if (target.substr(0,4) != "/api") {
                 auto temp = EncodeURL(target);
-                if (temp.has_value() && !IsSubPath(temp.value())) {
+                fs::path n_path = files_path_;
+                n_path += temp.value();
+                bool sub_path = IsSubPath(n_path);
+
+                if (temp.has_value() && !sub_path) {
                     send(text_response_with_type(http::status::bad_request, "Bad request", ContentType::PLAIN_TEXT));
                     return;
                 }
-                if (temp.has_value() && IsSubPath(temp.value())) {
+                if (temp.has_value() && sub_path) {
                     using namespace http;
-                    std::string req_url = temp.value();
+                    std::string req_url = n_path;
                     response <file_body> res;
                     res.version(11);  // HTTP/1.1
                     res.result(status::ok);
@@ -210,9 +214,9 @@ private:
         return result;
     }
 
-    bool IsSubPath(fs::path path) const {
+    bool IsSubPath(const fs::path& p) const {
         // Приводим пути к каноничному виду (без . и ..)
-        path = fs::weakly_canonical(path);
+        fs::path path = fs::weakly_canonical(p);
 
         // Проверяем, что все компоненты files_path_ содержатся внутри path
         for (auto b = files_path_.begin(), p = path.begin(); b != files_path_.end(); ++b, ++p) {
