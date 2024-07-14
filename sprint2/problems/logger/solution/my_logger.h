@@ -101,7 +101,7 @@ void Logger::Log(const Ts&... args) {
         throw std::exception();
     }
     
-    logfile << GetTimeStamp() << ":";
+    logfile << GetTimeStamp() << ": ";
     
     Print(logfile, args ...);
     logfile << std::endl;   
