@@ -32,6 +32,19 @@ RUN cd /app/build && \
     cmake --build .
 
 RUN	apt install -y rsyslog 
-CMD reboot
-# RUN usermod -a -G syslog $USER 
+
+# Создадим пользователя rufus
+RUN groupadd -r syslog &&\
+	 useradd -r -g syslog rufus
+RUN usermod -a -G syslog rufus
+RUN chgrp syslog /var/log
+RUN chmod g+rw /var/log
+
+USER rufus
+
+# Запускаем игровой сервер
+ENTRYPOINT ["./app/build/bin/hello_log"]
+
+
+
 
