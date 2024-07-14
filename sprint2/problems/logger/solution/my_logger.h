@@ -35,9 +35,15 @@ class Logger {
     }
 
     auto GetTimeStamp() const {
-        const auto now = GetTime();
-        const auto t_c = std::chrono::system_clock::to_time_t(now);
-        return std::put_time(std::localtime(&t_c), "%F %T");
+        std::chrono::system_clock::time_point now;
+        if (!manual_ts_.has_value()) {
+            now = GetTime();
+        } else {
+            now = manual_ts_.value();
+        }
+            const auto t_c = std::chrono::system_clock::to_time_t(now);
+            return std::put_time(std::localtime(&t_c), "%F %T");
+        
     }
 
     // Для имени файла возьмите дату с форматом "%Y_%m_%d"
@@ -94,11 +100,9 @@ void Logger::Log(const Ts&... args) {
     if (!logfile.is_open()) {
         throw std::exception();
     }
-    if (!manual_ts_.has_value()) {
-        logfile << manual_ts_.value() << ":";
-    } else {
-        logfile << GetTimeStamp() << ":";
-    }
+    
+    logfile << GetTimeStamp() << ":";
+    
     Print(logfile, args ...);
     logfile << std::endl;   
 }
