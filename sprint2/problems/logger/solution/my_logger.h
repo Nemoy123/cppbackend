@@ -87,7 +87,7 @@ private:
 template<class... Ts>
 void Logger::Log(const Ts&... args) {
     //size_t count_ars = sizeof...(args);
-    std::string file_name = "sample_log_" + GetFileTimeStamp() + ".log";
+    std::string file_name = "/var/log/sample_log_" + GetFileTimeStamp() + ".log";
     std::lock_guard<std::mutex> lock(mut);
     std::ofstream logfile (file_name, std::ios::app);
      // окрываем файл для дозаписи
@@ -111,7 +111,7 @@ std::string Logger::GetFileTimeStamp() const {
        now = manual_ts_.value();
     }
     const auto t_c = std::chrono::system_clock::to_time_t(now);
-    auto name = std::put_time(std::localtime(&t_c), "%y %m %d");
+    auto name = std::put_time(std::localtime(&t_c), "%Y %m %d");
     std::stringstream ss;
     ss << name;
     return ss.str();
