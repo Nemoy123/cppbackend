@@ -143,7 +143,7 @@ void StartServer (const unsigned short& port, const std::string& adr) {
     json::value custom_data {std::move(total)};
 
     json::object date;
-    date["port"] = std::to_string(port);
+    date["port"] = port;
     date["address"] = adr;
     custom_data.as_object()["data"] = std::move(date);
 
