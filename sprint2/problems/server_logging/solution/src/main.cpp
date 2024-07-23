@@ -76,8 +76,8 @@ int main(int argc, const char* argv[]) {
             // send = std::move(send_f);
             
         });
-        
-        LogInfoMessage ("Server has started");
+        std::cout << "Server has started"sv << std::endl;
+        //LogInfoMessage ("Server has started");
         StartServer(port, address.to_string());
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         //std::cout << "Server has started..."sv << std::endl;
