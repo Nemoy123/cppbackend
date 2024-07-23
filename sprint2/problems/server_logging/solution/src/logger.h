@@ -126,9 +126,9 @@ void LoggingRequestHandler<SomeRequestHandler>::LogResponse(auto& time, auto cod
     json::value custom_data {std::move(total)};
 
     // tempor test = r;
+    total["ip"] = ip;
     total["response_time"] = dur_time.count();
     total["code"] = code;
-    total["ip"] = ip;
     total["content_type"] = conttype;
     custom_data.as_object()["data"] = std::move(total);
     
@@ -178,11 +178,9 @@ void LogNetError (const std::string&& where, const int val, const std::string&& 
     json::value custom_data {std::move(total)};
 
     json::object date;
-    date["where"] = where;
     date["code"] = std::to_string(val);
     date["text"] = msg;
-    
-    
+    date["where"] = where;
     custom_data.as_object()["data"] = std::move(date);
 
     BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, custom_data);
