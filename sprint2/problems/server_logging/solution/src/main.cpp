@@ -77,10 +77,11 @@ int main(int argc, const char* argv[]) {
             
         });
         
+        LogInfoMessage ("Server has started");
         StartServer(port, address.to_string());
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         //std::cout << "Server has started..."sv << std::endl;
-        LogInfoMessage ("Server has started...");
+        
 
         // 6. Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] {
