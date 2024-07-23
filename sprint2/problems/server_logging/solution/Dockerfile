@@ -48,8 +48,8 @@ FROM ubuntu:22.04 AS run
 # Скопируем приложение со сборочного контейнера в директорию /app.
 # Не забываем также папку data, она пригодится.
 COPY --from=build /app/build/bin/game_server /app/
-COPY ./data/config.json /app/data/config.json
-COPY --from=build app/data/config.json /app/data/config.json
+COPY ./data /app/data
+# COPY --from=build app/data/config.json /app/data/config.json
 
 # Создадим пользователя www
 RUN groupadd -r www && useradd -r -g www www
@@ -62,4 +62,4 @@ USER www
 
 
 # Запускаем игровой сервер
-ENTRYPOINT ["./app/game_server", "./app/data/config.json"]
+ENTRYPOINT ["/app/game_server", "/app/data/config.json"]
