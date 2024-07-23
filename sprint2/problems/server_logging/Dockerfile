@@ -23,6 +23,7 @@ RUN mkdir /app/build && cd /app/build && \
 
 
 COPY ./src /app/src
+COPY ./static /app/static
 COPY ./data/config.json /app/data/config.json 
 COPY CMakeLists.txt /app/
 
@@ -49,6 +50,7 @@ FROM ubuntu:22.04 AS run
 # Не забываем также папку data, она пригодится.
 COPY --from=build /app/build/bin/game_server /app/
 COPY ./data /app/data
+COPY ./static /app/static
 # COPY --from=build app/data/config.json /app/data/config.json
 
 # Создадим пользователя www
@@ -62,4 +64,4 @@ USER www
 
 
 # Запускаем игровой сервер
-ENTRYPOINT ["/app/game_server", "/app/data/config.json"]
+ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
