@@ -64,9 +64,15 @@ int main(int argc, const char* argv[]) {
                 }
             });
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-            const std::filesystem::path json_path_files = std::filesystem::weakly_canonical(argv[2]);
+            std::filesystem::path json_path_files = std::filesystem::weakly_canonical(argv[2]);
+            if (!std::filesystem::is_directory(json_path_files)) {
+                std::string temp = argv[2];
+                temp = temp.substr(1);
+                json_path_files = std::filesystem::path{std::filesystem::weakly_canonical(std::move(temp))};
+            }
             std::error_code ec;
             if (!std::filesystem::is_directory(json_path_files, ec)) {
+                
                 std::cerr << "Files directory not exist"sv << std::endl;
                 return EXIT_FAILURE;
             }
