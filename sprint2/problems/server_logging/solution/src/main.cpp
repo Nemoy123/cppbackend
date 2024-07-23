@@ -45,7 +45,7 @@ int main(int argc, const char* argv[]) {
         
             //model::Game game = json_loader::LoadGame("test.json");
        
-           model::Game game = json_loader::LoadGame(argv[1]);
+           model::Game game = json_loader::LoadGame(std::filesystem::weakly_canonical(argv[1]));
        
             
 
@@ -64,7 +64,13 @@ int main(int argc, const char* argv[]) {
                 }
             });
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-            http_handler::RequestHandler handler{game, fs::path(argv[2])};
+            const std::filesystem::path json_path_files = std::filesystem::weakly_canonical(argv[2]);
+            std::error_code ec;
+            if (!std::filesystem::is_directory(json_path_files, ec)) {
+                std::cerr << "Files directory not exist"sv << std::endl;
+                return EXIT_FAILURE;
+            }
+            http_handler::RequestHandler handler{game, json_path_files};
             LoggingRequestHandler<http_handler::RequestHandler> logging_handler{handler};
 
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов

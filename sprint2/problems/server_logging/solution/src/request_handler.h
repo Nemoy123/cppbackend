@@ -27,9 +27,9 @@ struct ContentType {
 
 class RequestHandler {
 public:
-    explicit RequestHandler(model::Game& game, fs::path&& files_path)
+    explicit RequestHandler(model::Game& game, const fs::path& files_path)
         : game_{game}
-        , files_path_(fs::weakly_canonical(std::move(files_path)))
+        , files_path_(fs::weakly_canonical(files_path))
     {
     }
 
