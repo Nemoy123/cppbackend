@@ -39,6 +39,39 @@ int main(int argc, const char* argv[]) {
             std::cerr << "Usage: game_server <game-config-json> <files>"sv << std::endl;
             return EXIT_FAILURE;
         }
+        std::filesystem::path json_config = std::filesystem::canonical(argv[1]);
+        std::filesystem::path json_path_files  = std::filesystem::canonical(argv[2]);
+        
+            if (!json_config.is_absolute() && !json_config.is_relative()) {
+                
+                std::string temp = argv[1];
+                if (temp.at(0) == '/') {
+                    temp = temp.substr(1);
+                
+                    json_config = std::filesystem::path{std::filesystem::weakly_canonical(std::move(temp))};
+                }
+            } 
+            if (!json_path_files.is_absolute() && !json_path_files.is_relative()){
+                
+                std::string temp = argv[2];
+                if (temp.at(0) == '/') {
+                    temp = temp.substr(1);
+                
+                    json_path_files = std::filesystem::path{std::filesystem::weakly_canonical(std::move(temp))};
+                }
+            } 
+
+
+            if (!std::filesystem::is_directory(json_path_files)) {
+                std::cerr << "Files directory not exist: "sv << json_path_files << std::endl;
+                return EXIT_FAILURE;
+            }
+            if(!std::filesystem::is_regular_file(json_config)) {
+                 std::cerr << "File config not exist: "sv << json_config << std::endl;
+                return EXIT_FAILURE;
+            }
+
+
     
     try {
         // 1. Загружаем карту из файла и построить модель игры
@@ -64,16 +97,16 @@ int main(int argc, const char* argv[]) {
                 }
             });
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-            std::filesystem::path json_path_files = std::filesystem::weakly_canonical(argv[2]);
-            if (!std::filesystem::is_directory(json_path_files)) {
-                std::string temp = argv[2];
-                temp = temp.substr(1);
-                json_path_files = std::filesystem::path{std::filesystem::weakly_canonical(std::move(temp))};
-            }
+            // std::filesystem::path json_path_files = std::filesystem::weakly_canonical(argv[2]);
+            // if (!std::filesystem::is_directory(json_path_files)) {
+            //     std::string temp = argv[2];
+            //     temp = temp.substr(1);
+            //     json_path_files = std::filesystem::path{std::filesystem::weakly_canonical(std::move(temp))};
+            // }
             std::error_code ec;
             if (!std::filesystem::is_directory(json_path_files, ec)) {
                 
-                std::cerr << "Files directory not exist"sv << std::endl;
+                std::cerr << "Files directory not exist: "sv << json_path_files << std::endl;
                 return EXIT_FAILURE;
             }
             http_handler::RequestHandler handler{game, json_path_files};
