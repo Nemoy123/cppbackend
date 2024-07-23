@@ -162,7 +162,7 @@ void StopServer (const bool code, const std::optional<std::exception>& exc) {
     json::value custom_data {std::move(total)};
 
     json::object date;
-    date["code"] = code;
+    date["code"] = (int)code;
     if (exc.has_value()) {
         date["exception"] = exc.value().what();
     }
