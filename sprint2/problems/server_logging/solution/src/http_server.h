@@ -14,9 +14,11 @@ namespace http_server {
 
 using namespace std::literals;
 
-void ReportError(boost::beast::error_code ec, std::string_view what) {
-    std::cerr << what << ": "sv << ec.message() << std::endl;
-}
+// void ReportError(boost::beast::error_code ec, std::string_view what) {
+//     //std::cerr << what << ": "sv << ec.message() << std::endl;
+//     LogNetError ()
+    
+// }
 
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
@@ -87,7 +89,8 @@ private:
         }
         if (ec) {
             LogNetError ("read", ec.value(), ec.what());
-            return ReportError(ec, "read"sv);
+            //return ReportError(ec, "read"sv);
+            return;
         }
 
         request_.set("ip", stream_.socket().remote_endpoint().address().to_string());
@@ -98,7 +101,9 @@ private:
         beast::error_code ec;
         stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
         if (ec) {
-            ReportError(ec, "socket shutdown"sv);
+
+            //ReportError(ec, "socket shutdown"sv);
+            LogNetError ("read", ec.value(), "socket shutdown");
         }
     }
 
@@ -109,7 +114,8 @@ private:
     void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
         if (ec) {
             LogNetError ("write", ec.value(), ec.what());
-            return ReportError(ec, "write"sv);
+            //return ReportError(ec, "write"sv);
+            return;
         }
 
         if (close) {
@@ -215,7 +221,8 @@ private:
         if (ec) {
            
             LogNetError ("accept", ec.value(), ec.what());  
-            return ReportError(ec, "accept"sv);
+            //return ReportError(ec, "accept"sv);
+            return;
         }
 
         // Асинхронно обрабатываем сессию

@@ -84,7 +84,9 @@ void Formatter(logging::record_view const& rec, logging::formatting_ostream& str
     
     strm <<"{";
     strm << "\"timestamp\":" << json::serialize(to_iso_extended_string(ts)) << ",";
-    strm << "\"data\":" << json::serialize(obj->at("data")) << ",";
+    if (obj->as_object().contains("data")) {
+        strm << "\"data\":" << json::serialize(obj->at("data")) << ",";
+    }
     strm << "\"message\":" << json::serialize(obj->at("message"));
     strm <<"}";
 
@@ -185,3 +187,13 @@ void LogNetError (const std::string&& where, const int val, const std::string&& 
 
     BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, custom_data);
 }
+
+void LogInfoMessage (const std::string&& msg) {
+
+   json::object total;
+    total ["message"] = msg;
+    json::value custom_data {std::move(total)};
+    BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, custom_data);
+
+}
+

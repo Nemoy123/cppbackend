@@ -60,6 +60,7 @@ int main(int argc, const char* argv[]) {
                 if (!ec) {
                     StopServer(EXIT_SUCCESS, std::nullopt);
                     ioc.stop();
+                    return;
                 }
             });
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
@@ -78,18 +79,19 @@ int main(int argc, const char* argv[]) {
         
         StartServer(port, address.to_string());
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-        std::cout << "Server has started..."sv << std::endl;
+        //std::cout << "Server has started..."sv << std::endl;
+        LogInfoMessage ("Server has started...");
 
         // 6. Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] {
             ioc.run();
         });
     } catch (const std::exception& ex) {
-        std::cerr << ex.what() << std::endl;
+        //std::cerr << ex.what() << std::endl;
         StopServer(EXIT_FAILURE, ex);
         return EXIT_FAILURE;
     }
-    StopServer(EXIT_SUCCESS, std::nullopt);
+    //StopServer(EXIT_SUCCESS, std::nullopt);
     return EXIT_SUCCESS;
 }
 
