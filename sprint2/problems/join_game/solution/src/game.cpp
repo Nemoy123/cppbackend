@@ -64,7 +64,7 @@ detail::Token Game::AddPlayer (std::string& user_name, std::string& map_name) {
     // добавить к игрокам
     std::shared_ptr<Player> playerptr = players->AddPlayer (id_dog, map_name);
     // присвоить указатель собаке в игроке
-    playerptr->SetDog (iter->second->GetDog(id_dog));  
+    playerptr->SetDog (game_sessions_.at(Map::Id {map_name})->GetDog(id_dog));  
     // получить токен
     detail::Token token_for_player = players_tokens_->GiveTokenNewPlayer (playerptr);
      

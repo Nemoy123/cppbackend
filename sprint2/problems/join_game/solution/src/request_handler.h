@@ -169,10 +169,9 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
                 }
 
             }
-            else if (target.starts_with ("/api/v1/game/join") 
-                    && req.find(http::field::content_type) != req.end()
-                    && req[http::field::content_type] == "application/json") {
-                
+            else if (target.starts_with ("/api/v1/game/join") ) {
+                //&& req.find(http::field::content_type) != req.end()
+                //   && req[http::field::content_type] == "application/json"
                 if (req.method_string() != "POST") { 
                      
                     json::object obj;
@@ -196,8 +195,10 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
                 std::string mapid {};
                 try {
                     json::value user = json::parse(req.body());
-                    user_name = serialize (user.as_object().at ("userName"));
-                    mapid = serialize (user.as_object().at ("mapId"));
+                    //user_name = serialize (user.as_object().at ("userName"));
+                    user_name = user.as_object().at ("userName").as_string();
+                    //mapid = serialize (user.as_object().at ("mapId"));
+                    mapid = user.as_object().at ("mapId").as_string();
                 } catch (...) {
                      json::object obj;
                     obj["code"] = "invalidArgument";
@@ -212,7 +213,7 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
                     send(std::move(res));
                     return;
                 }
-                if (user_name.empty()) {
+                if (user_name == "") {
 
                     json::object obj;
                     obj["code"] = "invalidArgument";
@@ -314,7 +315,7 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
                         }
                         StringResponse res;
                         res.version(11);  // HTTP/1.1
-                        res.result(http::status::method_not_allowed);
+                        res.result(http::status::ok);
                         res.set(http::field::content_type, "application/json");
                         res.body() = json::serialize(response_message);
                         res.content_length(res.body().size());

@@ -24,6 +24,8 @@ std::string PlayerTokens::GenerateToken ()  {
     std::stringstream stream;
     stream << std::hex << number1 << number2;
     std::string result( stream.str() );
-    
+    while (result.size() < 32) {
+        result += "0";
+    }
     return result;
 }
