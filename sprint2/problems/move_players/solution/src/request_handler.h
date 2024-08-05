@@ -427,7 +427,17 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
                     return;
                 }
 
-            }   
+            }  
+            
+            else {
+                json::object obj;
+                obj["code"] = "badRequest";
+                obj["message"] = "Invalid content type";
+                
+                send(text_response_nocache(http::status::bad_request, json::serialize(std::move(obj)) ));
+                return;
+            }
+            
                          
             
 }
