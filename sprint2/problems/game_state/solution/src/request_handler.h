@@ -65,8 +65,8 @@ public:
 
     template <typename FuncMakeResponse, typename FuncSend>
     void FileHandler (std::string_view target, FuncMakeResponse& funcmakestring, FuncSend& send);
-    template <typename FuncMakeResponseString, typename FuncRequest, typename FuncSend>
-    void ApiHandler (std::string_view target, FuncMakeResponseString& text_response, FuncRequest& req, FuncSend& send);
+    template <typename Request, typename Send>
+    void ApiHandler (Request&& req, Send&& send);
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send);
@@ -82,13 +82,84 @@ private:
 
     bool IsSubPath(const fs::path& p) const;
 
-    template <typename Body, typename Allocator>
-    std::shared_ptr <Player> CheckAutorization (http::request<Body, http::basic_fields<Allocator>>& req, const Game& game_) const;
+    template <typename Request, typename Send>
+    void MakeUnauthorizedErrorUnknownToken(Request&& req, Send&& send);
 
+    template <typename Request, typename Send>
+    void MakeUnauthorizedErrorInvalidToken(Request&& req, Send&& send);
+
+    template <typename Request, typename Send>
+    void MakeInvalidMethodError (Request&& req, Send&& send, std::string_view allow_methods);
+
+    template <typename Request, typename Send>
+    std::shared_ptr <Player> TryExtractToken(Request&& req, Send&& send);
+
+    
 };
 
 
+template <typename Request, typename Send>
+void RequestHandler::MakeInvalidMethodError (Request&& req, Send&& send, std::string_view allow_methods) {
+    bool nocache = true;
+    bool keep_alive = false;
+    const auto text_response_nocache= [&](http::status status, std::string_view text, std::string_view allow_methods = {}) {
+            return MakeStringResponse(status, text, req.version(), keep_alive, ContentType::JSON, nocache, allow_methods);
+    };
+    using namespace std::literals;
+    json::object obj;
+    obj["code"] = "invalidMethod";
+    std::string mess {"Only "s};
+    mess += std::string{allow_methods} + " method is expected"s;
+    obj["message"] = std::move(mess);
+    send(text_response_nocache(http::status::method_not_allowed, json::serialize(obj), allow_methods));
+}
 
+template <typename Request, typename Send>
+std::shared_ptr <Player> RequestHandler::TryExtractToken(Request&& req, Send&& send) { 
+    auto tok = req.find(http::field::authorization);
+    if (tok == req.end()) { 
+        MakeUnauthorizedErrorInvalidToken(req, send);
+        return nullptr;
+    }
+    std::string token = req.at(http::field::authorization);
+    if (!token.starts_with ("Bearer ") || token.size() != 39) {
+        MakeUnauthorizedErrorInvalidToken(req, send);
+        return nullptr;
+    }
+    token = token.substr(7);
+    auto ptr_player = game_.FindPlayer(token);
+    if (ptr_player == nullptr) {
+        MakeUnauthorizedErrorUnknownToken(req, send);
+        return nullptr;
+    }
+    return ptr_player;
+}
+
+template <typename Request, typename Send>
+void RequestHandler::MakeUnauthorizedErrorUnknownToken(Request&& req, Send&& send) {
+    bool nocache = true;
+    bool keep_alive = false;
+    const auto text_response_nocache= [&](http::status status, std::string_view text, std::string_view allow_methods = {}) {
+            return MakeStringResponse(status, text, req.version(), keep_alive, ContentType::JSON, nocache, allow_methods);
+    };
+    json::object obj;
+    obj["code"] = "unknownToken";
+    obj["message"] = "Player token has not been found";
+    send(text_response_nocache(http::status::unauthorized, json::serialize(obj)));  
+}
+
+template <typename Request, typename Send>
+void RequestHandler::MakeUnauthorizedErrorInvalidToken(Request&& req, Send&& send) {
+    bool nocache = true;
+    bool keep_alive = false;
+    const auto text_response_nocache= [&](http::status status, std::string_view text, std::string_view allow_methods = {}) {
+            return MakeStringResponse(status, text, req.version(), keep_alive, ContentType::JSON, nocache, allow_methods);
+    };
+    json::object obj;
+    obj["code"] = "invalidToken";
+    obj["message"] = "Authorization header is missing";
+    send(text_response_nocache(http::status::unauthorized, json::serialize(obj)));
+}
 
 template <typename FuncMakeResponse, typename FuncSend>
 void RequestHandler::FileHandler (std::string_view target, FuncMakeResponse& funcmakestring, FuncSend& send) {
@@ -97,7 +168,6 @@ void RequestHandler::FileHandler (std::string_view target, FuncMakeResponse& fun
         send(funcmakestring(http::status::bad_request, "Bad request", ContentType::PLAIN_TEXT));
         return;
     }
-
     fs::path n_path = files_path_;
     n_path += temp.value();
     bool sub_path = IsSubPath(n_path);
@@ -105,54 +175,43 @@ void RequestHandler::FileHandler (std::string_view target, FuncMakeResponse& fun
         send(funcmakestring(http::status::bad_request, "Bad request", ContentType::PLAIN_TEXT));
         return;
     }
-
-
     if (temp.value().back() == '/') {
         n_path += std::string {"index.html"};
     }
+    using namespace http;
+    std::string req_url = n_path;
+    response <file_body> res;
+    res.version(11);  // HTTP/1.1
+    res.result(status::ok);
+    auto type = TypeIdentity (req_url);
+    res.insert(field::content_type, type);
+    file_body::value_type file;
+    if (sys::error_code ec; file.open(req_url.data(), beast::file_mode::read, ec), ec) {
 
-    //else if (temp.has_value() && sub_path) {
-        using namespace http;
-        std::string req_url = n_path;
-        response <file_body> res;
-        res.version(11);  // HTTP/1.1
-        res.result(status::ok);
-        auto type = TypeIdentity (req_url);
-        
-        res.insert(field::content_type, type);
-
-        file_body::value_type file;
-
-        if (sys::error_code ec; file.open(req_url.data(), beast::file_mode::read, ec), ec) {
-
-            send(funcmakestring(http::status::not_found, "File NOT found", ContentType::PLAIN_TEXT));
-            return;
-        }
-
-        res.body() = std::move(file);
-        // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
-        // в зависимости от свойств тела сообщения
-        res.prepare_payload();
-        //res.set_target_impl(req_url);
-        send(res);
+        send(funcmakestring(http::status::not_found, "File NOT found", ContentType::PLAIN_TEXT));
         return;
-    //}
-
+    }
+    res.body() = std::move(file);
+    // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
+    // в зависимости от свойств тела сообщения
+    res.prepare_payload();
+    send(res);
 }
 
-template <typename FuncMakeResponseString, typename FuncRequest, typename FuncSend>
-void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString& text_response, FuncRequest& req, FuncSend& send) {
-    bool nocache = true;
-    bool keep_alive = false;
+
+template <typename Request, typename Send>
+void RequestHandler::ApiHandler (Request&& req, Send&& send) {
+    const bool nocache = true;
+    const bool keep_alive = false;
     const auto text_response_nocache= [&](http::status status, std::string_view text, std::string_view allow_methods = {}) {
             return MakeStringResponse(status, text, req.version(), keep_alive, ContentType::JSON, nocache, allow_methods);
     };
+    const auto text_response= [&](http::status status, std::string_view text, std::string_view allow_methods = {}) {
+            return MakeStringResponse(status, text, req.version(), req.keep_alive(), ContentType::JSON, false, allow_methods);
+    };
     
-    // static StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version,
-    //                                 bool keep_alive,
-    //                                 std::string_view content_type = ContentType::JSON, bool nocache = false) 
-    
-    if (target == "/api/v1/maps") {
+   
+    if (req.target() == "/api/v1/maps") {
                 json::array arr;
                 for (const auto& gamemap : game_.GetMaps()) {
                     boost::json::object obj;
@@ -164,8 +223,8 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
                 send(text_response(http::status::ok, res));
                 return;
             }
-            else if (target.starts_with ("/api/v1/maps/") && target.size() > 13) {
-                std::string map_name {target.substr(13)};
+            else if (req.target().starts_with ("/api/v1/maps/") && req.target().size() > 13) {
+                std::string map_name {req.target().substr(13)};
                 const auto ptr_map  = (game_.FindMap(model::Map::Id{map_name}));
                 if (ptr_map != nullptr) {
                     boost::json::object val;
@@ -187,16 +246,12 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
 
             }
             
-            else if (target.starts_with ("/api/v1/game/join") ) {
+            else if (req.target().starts_with ("/api/v1/game/join") ) {
                
                 if (req.method_string() != "POST") { 
                      
-                    json::object obj;
-                    obj["code"] = "invalidMethod";
-                    obj["message"] = "Only POST method is expected";
-                    send(text_response_nocache(http::status::method_not_allowed, json::serialize(obj), "POST"));
+                    MakeInvalidMethodError (req, send, "POST");
                     return;
-                
                 }      
 
                 std::string user_name {};
@@ -240,30 +295,13 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
 
             }
 
-            else if (target.starts_with ("/api/v1/game/players"))  {
+            else if (req.target().starts_with ("/api/v1/game/players"))  {
                 if (req.method_string() != "GET" && req.method_string() != "HEAD") { 
-                    json::object obj;
-                    obj["code"] = "invalidMethod";
-                    obj["message"] = "Invalid method";
-                    send(text_response_nocache(http::status::method_not_allowed, json::serialize(obj), "GET, HEAD"));
+                    MakeInvalidMethodError (req,send,"GET, HEAD");
                     return;
-                
                 } 
-                if (req.find(http::field::authorization) == req.end()) {
-                    json::object obj;
-                    obj["code"] = "invalidToken";
-                    obj["message"] = "Authorization header is missing";
-                    send(text_response_nocache(http::status::unauthorized, json::serialize(obj))); 
-                    return;
-                }
-                auto ptr_player = CheckAutorization (req, game_);
-                if (ptr_player == nullptr) {
-                    json::object obj;
-                    obj["code"] = "unknownToken";
-                    obj["message"] = "Player token has not been found";
-                    send(text_response_nocache(http::status::unauthorized, json::serialize(obj)));
-                    return;
-                }
+                auto ptr_player = TryExtractToken(req, send);
+                
                 auto map_id = game_.FindPlayerMap (ptr_player);
                 json::object obj;
                 size_t count = 0;
@@ -275,36 +313,13 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
                 send(text_response_nocache(http::status::ok, json::serialize(obj)));
                 return; 
             }
-            ///api/v1/game/state
-            else if (target.starts_with ("/api/v1/game/state") ) { 
+            
+            else if (req.target().starts_with ("/api/v1/game/state") ) { 
                 if (req.method_string() != "GET" && req.method_string() != "HEAD") { 
-                    json::object obj;
-                    obj["code"] = "invalidMethod";
-                    obj["message"] = "Invalid method";
-                    send(text_response_nocache(http::status::method_not_allowed, json::serialize(obj), "GET, HEAD"));
+                    MakeInvalidMethodError (req,send,"GET, HEAD");
                     return;
-                
                 } 
-                if (req.find(http::field::authorization) == req.end() 
-                    || (req.find(http::field::authorization) != req.end() && req.at(http::field::authorization).size() < 39)) {
-                    
-                    json::object obj;
-                    obj["code"] = "invalidToken";
-                    obj["message"] = "Authorization header is required or invalid token";
-                    send(text_response_nocache(http::status::unauthorized, json::serialize(obj))); 
-                    return;
-                }
-                
-                
-                auto ptr_player = CheckAutorization (req, game_);
-                if (ptr_player == nullptr) {
-                    json::object obj;
-                    obj["code"] = "unknownToken";
-                    obj["message"] = "Player token has not been found";
-                    send(text_response_nocache(http::status::unauthorized, json::serialize(obj)));
-                    return;
-                }
-                
+                auto ptr_player = TryExtractToken(req, send);             
                 auto map_id = game_.FindPlayerMap (ptr_player);
                 bool need_id_dogs = false;
                 using namespace boost::json;
@@ -313,31 +328,20 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
 
                 for (const auto& id : game_.FindPlayersOnMap (map_id, need_id_dogs)) {
                     auto ptr_dog = game_.GetSession(map_id)->GetDog(std::stol(id));
-                    json::object temp;
-                    
-                    json::array pos = {{std::to_string(ptr_dog->GetPosition().x)}, {std::to_string(ptr_dog->GetPosition().y)}};
-                    //json::array speed = {{std::to_string(ptr_dog->GetSpeed().x)}, {std::to_string(ptr_dog->GetSpeed().y)}};
                     std::vector <double> pos_speed {ptr_dog->GetPosition().x, ptr_dog->GetPosition().y};
                     std::vector <double> vect_speed {ptr_dog->GetSpeed().x, ptr_dog->GetSpeed().y};
                     json::value pos_val = value_from( pos_speed );
                     json::value speed_val = value_from( vect_speed );
+                    json::object temp;
                     temp[json::string_view{"pos"}] = pos_val;
                     temp[json::string_view{"speed"}] = speed_val;
                     temp[json::string_view{"dir"}] = ptr_dog->GetDirection();
-
-                    
-                    
                     id_players[id] = std::move(temp);
-
                 }
-                    json::object finish;
-                    json::value s = "players";
-                    finish[s.as_string()] = std::move(id_players);
-                    //obj = value(finish);
-                    
-                // std::stringstream ss;
-                // ss << obj;
-                //std::string temp = finish;
+                json::object finish;
+                json::value s = "players";
+                finish[s.as_string()] = std::move(id_players);
+                   
                 std::string temp2 = serialize(finish);
                 send(text_response_nocache(http::status::ok, temp2));
             }
@@ -347,19 +351,7 @@ void RequestHandler::ApiHandler (std::string_view target, FuncMakeResponseString
             
 }
 
-template <typename Body, typename Allocator>
-std::shared_ptr <Player> RequestHandler::CheckAutorization (http::request<Body, http::basic_fields<Allocator>>& req, const Game& game_) const {
-    auto tok = req.find(http::field::authorization);
-    if (tok != req.end()) { 
-        std::string token = req.at(http::field::authorization); //
-        if (token.starts_with ("Bearer ") && token.size() > 7) {
-            token = token.substr(7);
-            auto ptr_player = game_.FindPlayer(token);
-            return ptr_player;
-        }
-    } 
-    return nullptr;
-}
+
 
 template <typename Body, typename Allocator, typename Send>
 void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
@@ -379,7 +371,7 @@ void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator
             }
         } 
         if (target.substr(0,4) == "/api") {
-                ApiHandler (target, text_response, req, send); 
+                ApiHandler (req, send); 
                 return;
         }
             
