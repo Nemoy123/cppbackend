@@ -15,6 +15,7 @@ namespace http = beast::http;
 namespace json = boost::json;
 namespace sys = boost::system;
 namespace fs = std::filesystem;
+namespace net = boost::asio;
 
 namespace http_handler {
 
@@ -33,11 +34,14 @@ struct ContentType {
     constexpr static std::string_view PLAIN_TEXT = "text/plain"sv;
 };
 
-class RequestHandler {
+class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
 public:
-    explicit RequestHandler(Game& game, const fs::path& files_path)
+    using Strand = net::strand<net::io_context::executor_type>;
+
+    explicit RequestHandler(Game& game, const fs::path& files_path, Strand& api_strand)
         : game_{game}
         , files_path_(fs::weakly_canonical(files_path))
+        , api_strand_ (api_strand)
     {
     }
 
@@ -75,6 +79,7 @@ public:
 private:
     Game& game_;
     fs::path files_path_;
+    Strand api_strand_;
 
     std::string TypeIdentity (const std::string_view in) const;
 
@@ -239,204 +244,221 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
     };
     
    
-    if (req.target() == "/api/v1/maps") {
-                json::array arr;
-                for (const auto& gamemap : game_.GetMaps()) {
-                    boost::json::object obj;
-                    obj[boost::json::string {"id"}] = boost::json::string {*gamemap.GetId()};
-                    obj[boost::json::string {"name"}] = gamemap.GetName();
-                    arr.push_back(obj);
-                }
-                std::string res = json::serialize(arr);
-                send(text_response(http::status::ok, res));
-                return;
-            }
-            else if (req.target().starts_with ("/api/v1/maps/") && req.target().size() > 13) {
-                std::string map_name {req.target().substr(13)};
-                const auto ptr_map  = (game_.FindMap(model::Map::Id{map_name}));
-                if (ptr_map != nullptr) {
-                    boost::json::object val;
-                    val["id"] = *(ptr_map->GetId());
-                    val["name"] = ptr_map->GetName();
-                    val["roads"] = json_loader::GetJsonRoads(*ptr_map);
-                    val["buildings"] = json_loader::GetJsonBuildings(*ptr_map);
-                    val["offices"] = json_loader::GetJsonOffices(*ptr_map);
-                    send(text_response(http::status::ok, json::serialize(val)));
-                    return;
-                }
-                else {
-                    boost::json::object val;
-                    val["code"] = "mapNotFound";
-                    val["message"] = "Map not found";
-                    send(text_response(http::status::not_found, json::serialize(val)));
-                    return;
-                }
-
-            }
-            
-            else if (req.target().starts_with ("/api/v1/game/join") ) {
-               
-                if (req.method_string() != "POST") { 
-                     
-                    MakeInvalidMethodError (req, send, "POST");
-                    return;
-                }      
-
-                std::string user_name {};
-                std::string mapid {};
-                try {
-                    json::value user = json::parse(req.body());
-                    //user_name = serialize (user.as_object().at ("userName"));
-                    user_name = user.as_object().at ("userName").as_string();
-                    //mapid = serialize (user.as_object().at ("mapId"));
-                    mapid = user.as_object().at ("mapId").as_string();
-                } catch (...) {
-                     json::object obj;
-                    obj["code"] = "invalidArgument";
-                    obj["message"] = "Join game request parse error";
-                    send(text_response_nocache(http::status::bad_request, json::serialize(obj)));
-                    return;
-                }
-                if (user_name == "") {
-
-                    json::object obj;
-                    obj["code"] = "invalidArgument";
-                    obj["message"] = "Invalid name";
-                    send(text_response_nocache(http::status::bad_request, json::serialize(obj)));
-                    return;
-                }
-                if (game_.FindMap(Map::Id{mapid}) == nullptr) {
-                    json::object obj;
-                    obj["code"] = "mapNotFound";
-                    obj["message"] = "Map not found";
-                    send(text_response_nocache(http::status::not_found, json::serialize(obj)));
-                    return;
-
-                }
-                detail::Token new_player = game_.AddPlayer (user_name, mapid);
-
+        if (req.target() == "/api/v1/maps") {
+            json::array arr;
+            for (const auto& gamemap : game_.GetMaps()) {
                 boost::json::object obj;
-                obj["authToken"] = new_player.token_string_;
-                obj["playerId"] = new_player.id_dog_;
-                send(text_response_nocache(http::status::ok, json::serialize(obj)));
-                return;           
-
+                obj[boost::json::string {"id"}] = boost::json::string {*gamemap.GetId()};
+                obj[boost::json::string {"name"}] = gamemap.GetName();
+                arr.push_back(obj);
             }
-
-            else if (req.target() == ("/api/v1/game/players"))  {
-                if (req.method_string() != "GET" && req.method_string() != "HEAD") { 
-                    MakeInvalidMethodError (req,send,"GET, HEAD");
-                    return;
-                } 
-                auto ptr_player = TryExtractToken(req, send);
-                if (ptr_player == nullptr) {return;};
-                auto map_id = game_.FindPlayerMap (ptr_player);
-                json::object obj;
-                size_t count = 0;
-                for (const auto& name : game_.FindPlayersOnMap (map_id)) {
-                    obj[std::to_string(count)] = name;
-                    ++count;
-                }
-                
-                send(text_response_nocache(http::status::ok, json::serialize(obj)));
-                return; 
-            }
-            
-            else if (req.target().starts_with ("/api/v1/game/state") ) { 
-                if (req.method_string() != "GET" && req.method_string() != "HEAD") { 
-                    MakeInvalidMethodError (req,send,"GET, HEAD");
-                    return;
-                } 
-                auto ptr_player = TryExtractToken(req, send);   
-                if (ptr_player == nullptr) {return;};          
-                auto map_id = game_.FindPlayerMap (ptr_player);
-                bool need_id_dogs = false;
-                using namespace boost::json;
-                json::value obj;
-                json::object id_players;
-
-                for (const auto& id : game_.FindPlayersOnMap (map_id, need_id_dogs)) {
-                    auto ptr_dog = game_.GetSession(map_id)->GetDog(std::stol(id));
-                    std::vector <double> pos_speed {ptr_dog->GetPosition().x, ptr_dog->GetPosition().y};
-                    std::vector <double> vect_speed {ptr_dog->GetSpeed().x, ptr_dog->GetSpeed().y};
-                    json::value pos_val = value_from( pos_speed );
-                    json::value speed_val = value_from( vect_speed );
-                    json::object temp;
-                    temp[json::string_view{"pos"}] = pos_val;
-                    temp[json::string_view{"speed"}] = speed_val;
-                    temp[json::string_view{"dir"}] = ptr_dog->GetDirection();
-                    id_players[id] = std::move(temp);
-                }
-                json::object finish;
-                json::value s = "players";
-                finish[s.as_string()] = std::move(id_players);
-                   
-                std::string temp2 = serialize(finish);
-                send(text_response_nocache(http::status::ok, temp2));
-            }
-        ///api/v1/game/player/action
-            else if (req.target().starts_with ("/api/v1/game/player/action") ) { 
-                if (req.method_string() != "POST") { 
-                    MakeInvalidMethodError (req,send,"POST");
-                    return;
-                } 
-                auto ptr_player = TryExtractToken(req, send);
-                if (ptr_player == nullptr) {return;}; 
-
-                using namespace boost::json;
-                using namespace http;
-                boost::system::error_code ec;
-
-                if (req.at (field::content_type) != "application/json") {
-                    MakeBadRequestError (req, send);
-                    return;
-                }
-                value mess;
-                mess = parse (req.body(), ec);
-                if( ec ) { MakeBadRequestError (req, send); return;}
-                
-                if (mess.as_object().find("move") != mess.as_object().cend()) {
-                     std::string direction = mess.as_object().at("move").as_string().c_str();   
-                     if (direction == "") {
-                        ptr_player->GetDogPtr()->SetSpeed({0,0});
-                     }  
-
-                     const double map_speed = game_.FindMap(game_.FindPlayerMap(ptr_player))->GetSpeed();
-                     
-                     if (direction == "L") {
-                        ptr_player->GetDogPtr()->SetSpeed({ 0 - map_speed, 0 });
-                     }
-                     else if (direction == "R") {
-                        ptr_player->GetDogPtr()->SetSpeed({ map_speed, 0 });
-                     }
-                     else if (direction == "U") {
-                        ptr_player->GetDogPtr()->SetSpeed({ 0, 0 - map_speed });
-                     }
-                     else if (direction == "D") {
-                        ptr_player->GetDogPtr()->SetSpeed({ 0, map_speed });
-                     }
-                     else {
-                        MakeBadRequestError (req, send);
-                        return;
-                     }
-
-                    send(text_response_nocache(http::status::ok, {})); 
-
-                } else {
-                    MakeBadRequestError (req, send);
-                    return;
-                }
-
-            }  
-            
-            else {
-                json::object obj;
-                obj["code"] = "badRequest";
-                obj["message"] = "Invalid content type";
-                
-                send(text_response_nocache(http::status::bad_request, json::serialize(std::move(obj)) ));
+            std::string res = json::serialize(arr);
+            send(text_response(http::status::ok, res));
+            return;
+        }
+        else if (req.target().starts_with ("/api/v1/maps/") && req.target().size() > 13) {
+            std::string map_name {req.target().substr(13)};
+            const auto ptr_map  = (game_.FindMap(model::Map::Id{map_name}));
+            if (ptr_map != nullptr) {
+                boost::json::object val;
+                val["id"] = *(ptr_map->GetId());
+                val["name"] = ptr_map->GetName();
+                val["roads"] = json_loader::GetJsonRoads(*ptr_map);
+                val["buildings"] = json_loader::GetJsonBuildings(*ptr_map);
+                val["offices"] = json_loader::GetJsonOffices(*ptr_map);
+                send(text_response(http::status::ok, json::serialize(val)));
                 return;
             }
+            else {
+                boost::json::object val;
+                val["code"] = "mapNotFound";
+                val["message"] = "Map not found";
+                send(text_response(http::status::not_found, json::serialize(val)));
+                return;
+            }
+
+        }
+        
+        else if (req.target().starts_with ("/api/v1/game/join") ) {
+            
+            if (req.method_string() != "POST") { 
+                    
+                MakeInvalidMethodError (req, send, "POST");
+                return;
+            }      
+
+            std::string user_name {};
+            std::string mapid {};
+            try {
+                json::value user = json::parse(req.body());
+                //user_name = serialize (user.as_object().at ("userName"));
+                user_name = user.as_object().at ("userName").as_string();
+                //mapid = serialize (user.as_object().at ("mapId"));
+                mapid = user.as_object().at ("mapId").as_string();
+            } catch (...) {
+                    json::object obj;
+                obj["code"] = "invalidArgument";
+                obj["message"] = "Join game request parse error";
+                send(text_response_nocache(http::status::bad_request, json::serialize(obj)));
+                return;
+            }
+            if (user_name == "") {
+
+                json::object obj;
+                obj["code"] = "invalidArgument";
+                obj["message"] = "Invalid name";
+                send(text_response_nocache(http::status::bad_request, json::serialize(obj)));
+                return;
+            }
+            if (game_.FindMap(Map::Id{mapid}) == nullptr) {
+                json::object obj;
+                obj["code"] = "mapNotFound";
+                obj["message"] = "Map not found";
+                send(text_response_nocache(http::status::not_found, json::serialize(obj)));
+                return;
+
+            }
+            detail::Token new_player = game_.AddPlayer (user_name, mapid);
+
+            boost::json::object obj;
+            obj["authToken"] = new_player.token_string_;
+            obj["playerId"] = new_player.id_dog_;
+            send(text_response_nocache(http::status::ok, json::serialize(obj)));
+            return;           
+
+        }
+
+        else if (req.target() == ("/api/v1/game/players"))  {
+            if (req.method_string() != "GET" && req.method_string() != "HEAD") { 
+                MakeInvalidMethodError (req,send,"GET, HEAD");
+                return;
+            } 
+            auto ptr_player = TryExtractToken(req, send);
+            if (ptr_player == nullptr) {return;};
+            auto map_id = game_.FindPlayerMap (ptr_player);
+            json::object obj;
+            size_t count = 0;
+            for (const auto& name : game_.FindPlayersOnMap (map_id)) {
+                obj[std::to_string(count)] = name;
+                ++count;
+            }
+            
+            send(text_response_nocache(http::status::ok, json::serialize(obj)));
+            return; 
+        }
+        
+        else if (req.target().starts_with ("/api/v1/game/state") ) { 
+            if (req.method_string() != "GET" && req.method_string() != "HEAD") { 
+                MakeInvalidMethodError (req,send,"GET, HEAD");
+                return;
+            } 
+            auto ptr_player = TryExtractToken(req, send);   
+            if (ptr_player == nullptr) {return;};          
+            auto map_id = game_.FindPlayerMap (ptr_player);
+            bool need_id_dogs = false;
+            using namespace boost::json;
+            json::value obj;
+            json::object id_players;
+
+            for (const auto& id : game_.FindPlayersOnMap (map_id, need_id_dogs)) {
+                auto ptr_dog = game_.GetSession(map_id)->GetDog(std::stol(id));
+                std::vector <double> pos_speed {ptr_dog->GetPosition().x, ptr_dog->GetPosition().y};
+                std::vector <double> vect_speed {ptr_dog->GetSpeed().x, ptr_dog->GetSpeed().y};
+                json::value pos_val = value_from( pos_speed );
+                json::value speed_val = value_from( vect_speed );
+                json::object temp;
+                temp[json::string_view{"pos"}] = pos_val;
+                temp[json::string_view{"speed"}] = speed_val;
+                temp[json::string_view{"dir"}] = ptr_dog->GetDirection();
+                id_players[id] = std::move(temp);
+            }
+            json::object finish;
+            json::value s = "players";
+            finish[s.as_string()] = std::move(id_players);
+                
+            std::string temp2 = serialize(finish);
+            send(text_response_nocache(http::status::ok, temp2));
+        }
+    ///api/v1/game/player/action
+        else if (req.target().starts_with ("/api/v1/game/player/action") ) { 
+            if (req.method_string() != "POST") { 
+                MakeInvalidMethodError (req,send,"POST");
+                return;
+            } 
+            auto ptr_player = TryExtractToken(req, send);
+            if (ptr_player == nullptr) {return;}; 
+
+            using namespace boost::json;
+            using namespace http;
+            boost::system::error_code ec;
+
+            if (req.at (field::content_type) != "application/json") {
+                MakeBadRequestError (req, send);
+                return;
+            }
+            value mess;
+            mess = parse (req.body(), ec);
+            if( ec ) { MakeBadRequestError (req, send); return;}
+            
+            if (mess.as_object().find("move") != mess.as_object().cend()) {
+                    std::string direction = mess.as_object().at("move").as_string().c_str();   
+                    if (direction == "") {
+                    ptr_player->GetDogPtr()->SetSpeed({0,0});
+                    }  
+
+                    const double map_speed = game_.FindMap(game_.FindPlayerMap(ptr_player))->GetSpeed();
+                    
+                    if (direction == "L") {
+                    ptr_player->GetDogPtr()->SetSpeed({ 0 - map_speed, 0 });
+                    }
+                    else if (direction == "R") {
+                    ptr_player->GetDogPtr()->SetSpeed({ map_speed, 0 });
+                    }
+                    else if (direction == "U") {
+                    ptr_player->GetDogPtr()->SetSpeed({ 0, 0 - map_speed });
+                    }
+                    else if (direction == "D") {
+                    ptr_player->GetDogPtr()->SetSpeed({ 0, map_speed });
+                    }
+                    else {
+                    MakeBadRequestError (req, send);
+                    return;
+                    }
+
+                send(text_response_nocache(http::status::ok, {})); 
+
+            } else {
+                MakeBadRequestError (req, send);
+                return;
+            }
+
+        }  
+        
+        
+        else if (req.target().starts_with ("/api/v1/game/player/action") ) { 
+            using namespace boost::json;
+            using namespace http;
+            
+            if (req.at (field::content_type) != "application/json") { MakeBadRequestError (req, send); return;}
+            boost::system::error_code ec;
+            value mess = parse (req.body(), ec);
+            if( ec ) { MakeBadRequestError (req, send); return;}
+            if (mess.as_object().find("timeDelta") == mess.as_object().cend()) { MakeBadRequestError (req, send); return;}
+            
+
+
+
+            send(text_response_nocache(http::status::ok, {})); 
+        }
+
+        else {
+            json::object obj;
+            obj["code"] = "badRequest";
+            obj["message"] = "Invalid content type";
+            
+            send(text_response_nocache(http::status::bad_request, json::serialize(std::move(obj)) ));
+            return;
+        }
             
                          
             
@@ -464,8 +486,22 @@ void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator
                 }
             } 
             if (target.substr(0,4) == "/api") {
-                    ApiHandler (req, send); 
-                    return;
+                auto handle = [self = shared_from_this(), send,
+                               req = std::forward<decltype(req)>(req)] {
+                    try {
+                        // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
+                        assert(self->api_strand_.running_in_this_thread());
+                        self->ApiHandler (req, send); 
+                        return;
+                    } catch (...) {
+                        std::cout << "Strand Error"<< std::endl;
+                        //send(self->ReportServerError(version, keep_alive));
+                    }
+                };
+                net::dispatch(api_strand_, handle);
+                return;
+                    // ApiHandler (req, send); 
+                    // return;
             }
         
             

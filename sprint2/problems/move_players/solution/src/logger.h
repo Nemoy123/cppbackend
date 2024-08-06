@@ -41,7 +41,8 @@ public:
 
 
     
-    void operator () (auto&& req, auto&& resp) { 
+    void operator () (auto&& req, auto&& resp) {
+        //std::lock_guard rty (m_);
         std::string ip{};
         LogRequest(req,ip);
         std::chrono::system_clock::time_point start_timer = std::chrono::system_clock::now();
@@ -53,12 +54,12 @@ public:
                 //     auto dur_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_timer - start_timer);
                 
                 if constexpr (std::is_same_v<http::response<http::string_body>, std::decay_t<decltype(func)>>) {
-                   
+                     std::lock_guard rty (m_);
                     LogResponse(start_timer, func.result_int(), func.at(http::field::content_type), ip);
                     resp(std::move(func));
                 }
                 else if constexpr (std::is_same_v<http::response <http::file_body>, std::decay_t<decltype(func)>>) {
-                    
+                    std::lock_guard rty (m_); 
                     LogResponse(start_timer, func.result_int(), func.at(http::field::content_type), ip);
                     resp(std::move(func));
                 }
@@ -120,7 +121,7 @@ void LoggingRequestHandler<SomeRequestHandler>::LogRequest(const Request& r, std
 
 template<class SomeRequestHandler>
 void LoggingRequestHandler<SomeRequestHandler>::LogResponse(auto& time, auto code, auto conttype, std::string& ip) { 
-    std::lock_guard rty (m_);
+    //std::lock_guard rty (m_);
     std::chrono::system_clock::time_point end_timer = std::chrono::system_clock::now();
     auto dur_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_timer - time);
     json::object total;

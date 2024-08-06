@@ -110,8 +110,22 @@ int main(int argc, const char* argv[]) {
                 std::cerr << "Files directory not exist: "sv << json_path_files << std::endl;
                 return EXIT_FAILURE;
             }
-            http_handler::RequestHandler handler{game, json_path_files};
-            LoggingRequestHandler<http_handler::RequestHandler> logging_handler{handler};
+
+            // strand для выполнения запросов к API
+            auto api_strand = net::make_strand(ioc);
+            // Создаём обработчик запросов в куче, управляемый shared_ptr
+            auto handler = std::make_shared<http_handler::RequestHandler>(game, json_path_files, api_strand);   
+            // Оборачиваем его в логирующий декоратор
+            // LoggingRequestHandler<http_handler::RequestHandler> logging_handler{
+            //     [handler](auto&& req, auto&& send) {
+            //         // Обрабатываем запрос
+            //         (*handler)( req, send);
+            //         // std::forward<decltype(req)>(req),
+            //         // std::forward<decltype(send)>(send));
+            // }};
+
+            //http_handler::RequestHandler handler{game, json_path_files};
+            LoggingRequestHandler<http_handler::RequestHandler> logging_handler{*handler};
 
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");

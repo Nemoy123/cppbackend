@@ -25,6 +25,8 @@ public:
     const Map* FindMap(const Map::Id& id) const noexcept ;
     std::vector<std::string> FindPlayersOnMap (const Map::Id& id, const bool names = true) const;
 
+    //void MoveUpdate (Strand strand);
+
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, std::size_t, MapIdHasher>;
@@ -35,4 +37,5 @@ private:
     std::unordered_map <Map::Id, std::shared_ptr <GameSession>, MapIdHasher> game_sessions_; // ключ имя карты
     std::shared_ptr <Players> players = std::make_shared<Players> (); // все игроки
     std::unique_ptr <PlayersTokens> players_tokens_ = std::make_unique<PlayersTokens> (); // токены
+    //Strand strand_;
 };
