@@ -51,12 +51,12 @@ int main(int argc, const char* argv[]) {
             if (args.value().time_mili > -1) {
                 testing = false;
             }
-            if (args.value().randomize == true) {
+            if (args.value().randomize) {
                 randomize = true;
             }
 
-            std::filesystem::path json_config = std::filesystem::canonical(args.value().config);
-            std::filesystem::path json_path_files  = std::filesystem::canonical(args.value().static_files);
+            json_config = std::filesystem::canonical(args.value().config);
+            json_path_files  = std::filesystem::canonical(args.value().static_files);
 
             if (!json_config.is_absolute() && !json_config.is_relative()) {
                 
@@ -115,7 +115,7 @@ int main(int argc, const char* argv[]) {
         
             //model::Game game = json_loader::LoadGame("test.json");
 
-           Game game = json_loader::LoadGame(api_strand, std::filesystem::weakly_canonical(argv[1]));
+           Game game = json_loader::LoadGame(api_strand, json_config);
            game.SetRandomize(randomize);
             
 

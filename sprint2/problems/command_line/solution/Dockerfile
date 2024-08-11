@@ -18,7 +18,7 @@ FROM gcc:13.2 AS build
 # Запуск conan как раньше
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
-    conan install .. --build=missing -s compiler.libcxx=libstdc++11 -s build_type=Debug
+    conan install .. --build=missing -s compiler.libcxx=libstdc++11 -s build_type=Release
 	
 
 
@@ -64,4 +64,4 @@ USER www
 
 
 # Запускаем игровой сервер
-ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
+ENTRYPOINT ["/app/game_server", "-c../../data/config.json", "-w../../static/"]

@@ -39,10 +39,10 @@ Allowed options:
             -c [ --config-file ] file         set config file path\n
             -w [ --www-root ] dir             set static files root\n
             --randomize-spawn-points          spawn dogs at random positions")");
-    add ("tick-period,t", po::value(&args.time_mili), "set tick period in milliseconds");
-    add("config-file,c", po::value(&args.config), "set config file path");
-    add("www-root,w", po::value(&args.static_files), "set static files root");
-    add("randomize-spawn-points", po::value(&(args.randomize=true)), "spawn dogs at random positions");
+    add ("tick-period,t", po::value(&args.time_mili)->value_name("milliseconds"s), "set tick period in milliseconds");
+    add("config-file,c", po::value(&args.config)->value_name("file"s), "set config file path");
+    add("www-root,w", po::value(&args.static_files)->value_name("dir"s), "set static files root");
+    add("randomize-spawn-points", po::value(&(args.randomize)), "spawn dogs at random positions");
     // Опция --dst file, сохраняющая свой аргумент в поле args.destination
     //    ("dst,d", po::value(&args.destination)->value_name("file"s), "Destination file name");
 
