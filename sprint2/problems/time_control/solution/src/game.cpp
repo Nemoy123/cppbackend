@@ -3,114 +3,260 @@
 
 using namespace model;
 
-void ChangeFunc (const bool axis, const bool direction, const Map::RoadMap* first_container, 
-                const Map::RoadMap* second_container, std::shared_ptr<Dog>& dog_ptr, const double time) {
-            //direction true - вправо или вниз двигаемся, в сторону увеличения.
-            // false - влево или вверх в сторону уменьшения
+// void ChangeFunc (const bool axis, const bool direction, const Map::RoadMap* first_container, 
+//                 const Map::RoadMap* second_container, std::shared_ptr<Dog>& dog_ptr, const double time) {
+//             //direction true - вправо или вниз двигаемся, в сторону увеличения.
+//             // false - влево или вверх в сторону уменьшения
 
-            //найти дороги относительно направления (налево и направо горизонт)
-            //if (*direction == "R" || *direction == "L") { 
-               // const Map::RoadMap* hroad_ptr = &(session->GetMap()->GetHorizontalRoads());
-                 //найти начальные координаты пса и направление
-                double* axis_d = nullptr;
-                double* axis_test = nullptr;
-                double* axis_speed = nullptr;
-                if (axis) {
-                    axis_d = &dog_ptr->GetPosition().x;
-                    axis_speed = &dog_ptr->GetSpeed().x;
-                    axis_test = &dog_ptr->GetPosition().y;
-                } else {
-                    axis_d = &dog_ptr->GetPosition().y;
-                    axis_speed = &dog_ptr->GetSpeed().y;
-                    axis_test = &dog_ptr->GetPosition().x;
-                }
-                // double x = dog_ptr->GetPosition().x;
-                // double y = dog_ptr->GetPosition().y;
-                //double test = y-0.4;
-                const double error_rate = 0.000001;
-                auto pos_min = first_container->lower_bound ((*axis_test - (0.4 + error_rate)));
+//             //найти дороги относительно направления (налево и направо горизонт)
+//             //if (*direction == "R" || *direction == "L") { 
+//                // const Map::RoadMap* hroad_ptr = &(session->GetMap()->GetHorizontalRoads());
+//                  //найти начальные координаты пса и направление
+//                 double* axis_d = nullptr;
+//                 double* axis_test = nullptr;
+//                 double* axis_speed = nullptr;
+//                 if (axis) {
+//                     axis_d = &dog_ptr->GetPosition().x;
+//                     axis_speed = &dog_ptr->GetSpeed().x;
+//                     axis_test = &dog_ptr->GetPosition().y;
+//                 } else {
+//                     axis_d = &dog_ptr->GetPosition().y;
+//                     axis_speed = &dog_ptr->GetSpeed().y;
+//                     axis_test = &dog_ptr->GetPosition().x;
+//                 }
+//                 // double x = dog_ptr->GetPosition().x;
+//                 // double y = dog_ptr->GetPosition().y;
+//                 //double test = y-0.4;
+//                 const double error_rate = 0.000001;
+//                 auto pos_min = first_container->lower_bound ((*axis_test - (0.4 + error_rate)));
                 
 
-                if (pos_min != first_container->end()) {  // lower_bound нашел значение (мы на гориз дороге)
-                        //if (pos_max == std::next(pos_min, 1)) { // если один элемент
-                    for (const auto& [start, end] : pos_min->second) { // смотрим в векторе отрезок гориз подходящий нам 
-                        if (*axis_d >= (start - (0.4 + error_rate)) && *axis_d <= (end + (0.4 + error_rate)) ) {
-                            if (direction == true) {
-                                if ((*axis_d + time * (*axis_speed)) > (end + 0.4)) {
-                                    *axis_d = (end + 0.4);
-                                    *axis_speed = 0;
-                                } else {
-                                    *axis_d = (*axis_d + time * (*axis_speed));
-                                }
-                                //dog_ptr->GetPosition().x = std::min ((end + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
-                            } else {
-                                if ((*axis_d + time * (*axis_speed)) < (start - 0.4)) { // 30.4 + 10*-4 = 
-                                    *axis_d = (start - 0.4);
-                                    *axis_speed = 0;
-                                } else {
-                                    *axis_d = (*axis_d + time * (*axis_speed));
-                                }
+//                 if (pos_min != first_container->end() && (pos_min->first - *axis_test < (0.4 + error_rate) )) {  // lower_bound нашел значение (мы на гориз дороге)
+//                         //if (pos_max == std::next(pos_min, 1)) { // если один элемент
+//                     for (const auto& [start, end] : pos_min->second) { // смотрим в векторе отрезок гориз подходящий нам 
+//                         if (*axis_d >= (start - (0.4 + error_rate)) && *axis_d <= (end + (0.4 + error_rate)) ) {
+//                             if (direction == true) {
+//                                 if ((*axis_d + time * (*axis_speed)) > (end + 0.4)) {
+//                                     *axis_d = (end + 0.4);
+//                                     *axis_speed = 0;
+//                                 } else {
+//                                     *axis_d = (*axis_d + time * (*axis_speed));
+//                                 }
+//                                 //dog_ptr->GetPosition().x = std::min ((end + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
+//                             } else {
+//                                 if ((*axis_d + time * (*axis_speed)) < (start - 0.4)) { // 30.4 + 10*-4 = 
+//                                     *axis_d = (start - 0.4);
+//                                     *axis_speed = 0;
+//                                 } else {
+//                                     *axis_d = (*axis_d + time * (*axis_speed));
+//                                 }
 
-                                //dog_ptr->GetPosition().x = std::min ((start - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
-                            }
-                            return;
-                        }
-                    }
-                }
-               // else { // lower_bound не нашел
-                    //const Map::RoadMap* vroad_ptr = &(session->GetMap()->GetVerticalRoads());
-                    pos_min = second_container->lower_bound ((*axis_test - (0.4 + error_rate)));
-                    if (pos_min == second_container->end()) {throw ("Move Error");}
-                    if (direction == true) {
-                        if ((*axis_d + time * (*axis_speed)) > (pos_min->first + 0.4)) 
-                        {
-                            *axis_d = (pos_min->first + 0.4);
-                            *axis_speed = 0;
-                        } else {
-                            *axis_d = (*axis_d + time * (*axis_speed));
-                        }
-                       //dog_ptr->GetPosition().x = std::min ((pos_min->first + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
-                    } else {
-                        if ((*axis_d - time * (*axis_speed)) > (pos_min->first - 0.4)) {
-                            *axis_d = (pos_min->first - 0.4);
-                            *axis_speed = 0;
-                        } else {
-                            *axis_d = (*axis_d - time * (*axis_speed));
-                        }
-                        //dog_ptr->GetPosition().x = std::min ((pos_min->first - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
-                    }
-                
-               // }
-           // }
-}
+//                                 //dog_ptr->GetPosition().x = std::min ((start - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
+//                             }
+//                             return;
+//                         }
+//                     }
+//                 }
+//                // else { // lower_bound не нашел
+//                     //const Map::RoadMap* vroad_ptr = &(session->GetMap()->GetVerticalRoads());
+//                     pos_min = second_container->lower_bound ((*axis_test - (0.4 + error_rate)));
+//                     //if (pos_min == second_container->end()) {throw ("Move Error");}
+//                     if (pos_min != second_container->end() && (pos_min->first - *axis_test < (0.4 + error_rate) )) {
+//                         if (direction == true) {
+//                             if ((*axis_d + time * (*axis_speed)) > (pos_min->first + 0.4)) 
+//                             {
+//                                 *axis_d = (pos_min->first + 0.4);
+//                                 *axis_speed = 0;
+//                             } else {
+//                                 *axis_d = (*axis_d + time * (*axis_speed));
+//                             }
+//                         //dog_ptr->GetPosition().x = std::min ((pos_min->first + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
+//                         } else {
+//                             if ((*axis_d - time * (*axis_speed)) > (pos_min->first - 0.4)) {
+//                                 *axis_d = (pos_min->first - 0.4);
+//                                 *axis_speed = 0;
+//                             } else {
+//                                 *axis_d = (*axis_d - time * (*axis_speed));
+//                             }
+//                             //dog_ptr->GetPosition().x = std::min ((pos_min->first - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
+//                         }
+//                         return;
+//                     }
+//                     //если мы здесь - двигаемся поперек дороги максимум на 0.4 от оси
+//                     if (axis) { // ось горизонт двигаемся вниз D растет
+//                         double* y_coord = &dog_ptr->GetPosition().y;
+//                         pos_min = first_container->lower_bound ((*y_coord - (0.4 + error_rate)));
+//                         if (direction) {
+//                             if ((pos_min->first - *y_coord < (0.4 + error_rate) )) {
+//                                 if ((*axis_d + time * (*axis_speed)) > (pos_min->first + 0.4)) {
+//                                    *axis_d = (pos_min->first + 0.4);
+//                                    *axis_speed = 0;
+//                                 }
+//                                 else {
+//                                     *axis_d = (*axis_d + time * (*axis_speed));
+//                                 }
+//                                 return;
+//                             }
+//                         } else {
+//                              if ((pos_min->first - *y_coord < (0.4 + error_rate) )) { 
+//                                 if ((*axis_d + time * (*axis_speed)) < (pos_min->first - 0.4)) { 
+//                                     *axis_d = (pos_min->first - 0.4);
+//                                     *axis_speed = 0;
+//                                 }
+//                                 else {
+//                                     *axis_d = (*axis_d + time * (*axis_speed));
+//                                 }
+//                                 return;
+//                              }   
+//                         }
+//                     } else { // вертикальная ось двигаемся в горизонт
+//                         double* x_coord = &dog_ptr->GetPosition().x;
+
+
+//                     }
+// }
+
+
+
 void Game::TimeUpdate (const uint64_t time) { 
     // auto time_handler = [self = shared_from_this(), time] {
     //     if (self == nullptr) return;
         double time_seconds = ((double)time) / 1000;
+        const double error_rate = 0.000001;
         for (auto& [map_id, session] : game_sessions_) { 
             for (auto& [dog_id, dog_ptr] : session->GetAllDogs()) { 
                 const std::string* direction = &dog_ptr->GetDirection();
                 if (*direction == "") {continue;}
-            
-                if (*direction == "R" || *direction == "L")  {
-                    bool axis = true;
+                else if (*direction == "R" || *direction == "L")  {
+                   // bool axis = true;
                     bool dir_bool = (*direction == "R") ? true : false;
                     const Map::RoadMap* first_container = &(session->GetMap()->GetHorizontalRoads());
                     const Map::RoadMap* second_container = &(session->GetMap()->GetVerticalRoads());
-                    ChangeFunc (axis, dir_bool, first_container, second_container, dog_ptr, time_seconds);
+                    double* y_key = &dog_ptr->GetPosition().y;
+                    double* x_key = &dog_ptr->GetPosition().x;
+                    double* x_speed = &dog_ptr->GetSpeed().x;
+                    auto pos_min = first_container->lower_bound ((*y_key - (0.4 + error_rate)));
+                    if (pos_min != first_container->end() && ((pos_min->first - *y_key) < (0.4 + error_rate) )) {
+                        for (const auto& [start, end] : pos_min->second) { // смотрим в векторе отрезок гориз подходящий нам 
+                            if (*x_key >= (start - (0.4 + error_rate)) && *x_key <= (end + (0.4 + error_rate)) ) {
+                                if (dir_bool == true) {
+                                    if ((*x_key + time_seconds * (*x_speed)) > (end + (0.4 + error_rate))) {
+                                        *x_key = (end + 0.4);
+                                        *x_speed = 0;
+                                    } 
+                                    else {
+                                        *x_key = (*x_key + time_seconds * (*x_speed));
+                                    }
+                                } 
+                                else {
+                                    if ((*x_key + time_seconds * (*x_speed)) < (start - (0.4 + error_rate))) { // 30.4 + 10*-4 = 
+                                        *x_key = (start - 0.4);
+                                        *x_speed = 0;
+                                    } 
+                                    else {
+                                        *x_key = (*x_key + time_seconds * (*x_speed));
+                                    }
+                                }
+                                continue;
+                            }
+                        } 
+                    }
+                    else {
+                        // двигаемся поперек
+                        pos_min = second_container->lower_bound ((*x_key - (0.4 + error_rate)));
+                        if (pos_min != first_container->end() && ((pos_min->first - *x_key) < (0.4 + error_rate) )) { 
+                            if (dir_bool) {
+                                if ((*x_key + time_seconds * (*x_speed)) > (pos_min->first + 0.4)) {
+                                    *x_key  = (pos_min->first + 0.4);
+                                    *x_speed = 0;
+                                }
+                                else {
+                                    *x_key  = (*x_key  + time_seconds * (*x_speed));
+                                }
+                                continue;
+                            }
+                            if (!dir_bool) {
+                                if ((*x_key + time_seconds * (*x_speed)) < (pos_min->first - 0.4)) {
+                                    *x_key  = (pos_min->first - 0.4);
+                                    *x_speed = 0;
+                                }
+                                else {
+                                    *x_key  = (*x_key  + time_seconds * (*x_speed));
+                                }
+                                continue;   
+                            }
+                        }
+
+                    }
                 }
                 else if (*direction == "D" || *direction == "U") {
                     bool axis = false;
                     bool dir_bool = (*direction == "D") ? true : false;
-                    const Map::RoadMap* first_container = &(session->GetMap()->GetVerticalRoads());
-                    const Map::RoadMap* second_container = &(session->GetMap()->GetHorizontalRoads());
-                    ChangeFunc (axis, dir_bool, first_container, second_container, dog_ptr, time_seconds);    
+                    const Map::RoadMap* vert_container = &(session->GetMap()->GetVerticalRoads());
+                    const Map::RoadMap* horiz_container = &(session->GetMap()->GetHorizontalRoads());
+                    double* y_key = &dog_ptr->GetPosition().y;
+                    double* x_key = &dog_ptr->GetPosition().x;
+                    double* y_speed = &dog_ptr->GetSpeed().y;
+                    auto pos_min = vert_container->lower_bound ((*x_key - (0.4 + error_rate)));
+                    if (pos_min != vert_container->end() && ((pos_min->first - *x_key) < (0.4 + error_rate) )) {
+                        for (const auto& [start, end] : pos_min->second) { // смотрим в векторе отрезок верктик подходящий нам 
+                            if (*y_key >= (start - (0.4 + error_rate)) && *y_key <= (end + (0.4 + error_rate)) ) { 
+                                if (dir_bool == true) {
+                                    if ((*y_key + time_seconds * (*y_speed)) > (end + 0.4)) {
+                                        *y_key = (end + 0.4);
+                                        *y_speed = 0;
+                                    } 
+                                    else {
+                                        *y_key = (*y_key + time_seconds * (*y_speed));
+                                    }
+                                } 
+                                else {
+                                    if ((*y_key + time_seconds * (*y_speed)) < (start - 0.4)) { // 30.4 + 10*-4 = 
+                                        *y_key = (start - 0.4);
+                                        *y_speed = 0;
+                                    } 
+                                    else {
+                                        *y_key = (*y_key + time_seconds * (*y_speed));
+                                    }
+                                }
+                                continue;
+                            }
+                        }
+                    }
+                    else {
+                            // двигаемся поперек
+                            pos_min = horiz_container->lower_bound ((*y_key - (0.4 + error_rate)));
+                            if (pos_min != horiz_container->end() && ((pos_min->first - *y_key) < (0.4 + error_rate) )) { 
+                                if (dir_bool) {    
+                                    if ((*y_key + time_seconds * (*y_speed)) > (pos_min->first + 0.4)) {
+                                        *y_key  = (pos_min->first + 0.4);
+                                        *y_speed = 0;
+                                    }
+                                    else {
+                                        *y_key  = (*y_key  + time_seconds * (*y_speed));
+                                    }
+                                    continue;
+                                }
+                                if (!dir_bool) {
+                                    if ((*y_key + time_seconds * (*y_speed)) < (pos_min->first - 0.4)) {
+                                        *y_key  = (pos_min->first - 0.4);
+                                        *y_speed = 0;
+                                    }
+                                    else {
+                                        *y_key  = (*y_key  + time_seconds * (*y_speed));
+                                    }
+                                    continue;  
+                                }
+                            }
+
+                    }
+
+
                 }
             }
         }
-    // };
-    // net::dispatch(time_strand_, time_handler);
 }
+
 
 
 const Map* Game::FindMap(const Map::Id& id) const  noexcept {
