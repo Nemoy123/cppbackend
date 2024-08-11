@@ -3,7 +3,8 @@
 
 using namespace model;
 
-void ChangeFunc (const bool direction, const Map::RoadMap* first_container, const Map::RoadMap* second_container, std::shared_ptr<Dog>& dog_ptr, const int time) {
+void ChangeFunc (const bool axis, const bool direction, const Map::RoadMap* first_container, 
+                const Map::RoadMap* second_container, std::shared_ptr<Dog>& dog_ptr, const double time) {
             //direction true - вправо или вниз двигаемся, в сторону увеличения.
             // false - влево или вверх в сторону уменьшения
 
@@ -11,56 +12,99 @@ void ChangeFunc (const bool direction, const Map::RoadMap* first_container, cons
             //if (*direction == "R" || *direction == "L") { 
                // const Map::RoadMap* hroad_ptr = &(session->GetMap()->GetHorizontalRoads());
                  //найти начальные координаты пса и направление
-                double x = dog_ptr->GetPosition().x;
-                double y = dog_ptr->GetPosition().y;
-                double test = y-0.4;
-                auto pos_min = first_container->lower_bound ((test));
+                double* axis_d = nullptr;
+                double* axis_test = nullptr;
+                double* axis_speed = nullptr;
+                if (axis) {
+                    axis_d = &dog_ptr->GetPosition().x;
+                    axis_speed = &dog_ptr->GetSpeed().x;
+                    axis_test = &dog_ptr->GetPosition().y;
+                } else {
+                    axis_d = &dog_ptr->GetPosition().y;
+                    axis_speed = &dog_ptr->GetSpeed().y;
+                    axis_test = &dog_ptr->GetPosition().x;
+                }
+                // double x = dog_ptr->GetPosition().x;
+                // double y = dog_ptr->GetPosition().y;
+                //double test = y-0.4;
+                const double error_rate = 0.000001;
+                auto pos_min = first_container->lower_bound ((*axis_test - (0.4 + error_rate)));
                 
 
                 if (pos_min != first_container->end()) {  // lower_bound нашел значение (мы на гориз дороге)
                         //if (pos_max == std::next(pos_min, 1)) { // если один элемент
                     for (const auto& [start, end] : pos_min->second) { // смотрим в векторе отрезок гориз подходящий нам 
-                        if (x >= (start-0.4) && x <= (end + 0.4) ) {
+                        if (*axis_d >= (start - (0.4 + error_rate)) && *axis_d <= (end + (0.4 + error_rate)) ) {
                             if (direction == true) {
-                                dog_ptr->GetPosition().x = std::min ((end + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
+                                if ((*axis_d + time * (*axis_speed)) > (end + 0.4)) {
+                                    *axis_d = (end + 0.4);
+                                    *axis_speed = 0;
+                                } else {
+                                    *axis_d = (*axis_d + time * (*axis_speed));
+                                }
+                                //dog_ptr->GetPosition().x = std::min ((end + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
                             } else {
-                                dog_ptr->GetPosition().x = std::min ((start - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
+                                if ((*axis_d + time * (*axis_speed)) < (start - 0.4)) { // 30.4 + 10*-4 = 
+                                    *axis_d = (start - 0.4);
+                                    *axis_speed = 0;
+                                } else {
+                                    *axis_d = (*axis_d + time * (*axis_speed));
+                                }
+
+                                //dog_ptr->GetPosition().x = std::min ((start - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
                             }
+                            return;
                         }
                     }
                 }
-                else { // lower_bound не нашел
+               // else { // lower_bound не нашел
                     //const Map::RoadMap* vroad_ptr = &(session->GetMap()->GetVerticalRoads());
-                    auto pos_min = second_container->lower_bound ((x - 0.4));
+                    pos_min = second_container->lower_bound ((*axis_test - (0.4 + error_rate)));
                     if (pos_min == second_container->end()) {throw ("Move Error");}
                     if (direction == true) {
-                        dog_ptr->GetPosition().x = std::min ((pos_min->first + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
+                        if ((*axis_d + time * (*axis_speed)) > (pos_min->first + 0.4)) 
+                        {
+                            *axis_d = (pos_min->first + 0.4);
+                            *axis_speed = 0;
+                        } else {
+                            *axis_d = (*axis_d + time * (*axis_speed));
+                        }
+                       //dog_ptr->GetPosition().x = std::min ((pos_min->first + 0.4),(dog_ptr->GetPosition().x + time * dog_ptr->GetSpeed().x));
                     } else {
-                        dog_ptr->GetPosition().x = std::min ((pos_min->first - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
+                        if ((*axis_d - time * (*axis_speed)) > (pos_min->first - 0.4)) {
+                            *axis_d = (pos_min->first - 0.4);
+                            *axis_speed = 0;
+                        } else {
+                            *axis_d = (*axis_d - time * (*axis_speed));
+                        }
+                        //dog_ptr->GetPosition().x = std::min ((pos_min->first - 0.4),(dog_ptr->GetPosition().x - time * dog_ptr->GetSpeed().x));
                     }
                 
-                }
+               // }
            // }
 }
 void Game::TimeUpdate (const uint64_t time) { 
     // auto time_handler = [self = shared_from_this(), time] {
     //     if (self == nullptr) return;
+        double time_seconds = ((double)time) / 1000;
         for (auto& [map_id, session] : game_sessions_) { 
             for (auto& [dog_id, dog_ptr] : session->GetAllDogs()) { 
                 const std::string* direction = &dog_ptr->GetDirection();
                 if (*direction == "") {continue;}
             
                 if (*direction == "R" || *direction == "L")  {
+                    bool axis = true;
                     bool dir_bool = (*direction == "R") ? true : false;
                     const Map::RoadMap* first_container = &(session->GetMap()->GetHorizontalRoads());
                     const Map::RoadMap* second_container = &(session->GetMap()->GetVerticalRoads());
-                    ChangeFunc (dir_bool, first_container, second_container, dog_ptr, time);
+                    ChangeFunc (axis, dir_bool, first_container, second_container, dog_ptr, time_seconds);
                 }
                 else if (*direction == "D" || *direction == "U") {
+                    bool axis = false;
                     bool dir_bool = (*direction == "D") ? true : false;
                     const Map::RoadMap* first_container = &(session->GetMap()->GetVerticalRoads());
                     const Map::RoadMap* second_container = &(session->GetMap()->GetHorizontalRoads());
-                    ChangeFunc (dir_bool, first_container, second_container, dog_ptr, time);    
+                    ChangeFunc (axis, dir_bool, first_container, second_container, dog_ptr, time_seconds);    
                 }
             }
         }

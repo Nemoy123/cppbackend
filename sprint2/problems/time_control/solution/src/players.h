@@ -41,7 +41,7 @@ class Dog {
         uint64_t id_ = 0;
         Pos pos_;
         Speed speed_;
-        std::string dir_{""};
+        std::string dir_{"U"};
 };
 
 

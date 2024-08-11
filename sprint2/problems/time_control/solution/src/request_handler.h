@@ -262,16 +262,14 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             const auto ptr_map  = (game_.FindMap(model::Map::Id{map_name}));
             if (ptr_map != nullptr) {
                 boost::json::object val;
-                // std::string mapstr {*(ptr_map->GetId())};
-                // val["id"] = mapstr;
+                
                 val["id"] = boost::json::string {*(ptr_map->GetId())};
-                val["name"] = ptr_map->GetName();
+                val["name"] = boost::json::string {ptr_map->GetName()};
                 val["roads"] = json_loader::GetJsonRoads(*ptr_map);
                 val["buildings"] = json_loader::GetJsonBuildings(*ptr_map);
                 val["offices"] = json_loader::GetJsonOffices(*ptr_map);
-                //json::value speed = ptr_map->GetSpeed();
-                //val["dogSpeed"] = ptr_map->GetSpeed();
-                send(text_response(http::status::ok, json::serialize(val)));
+                
+                send(text_response_nocache(http::status::ok, json::serialize(val)));
                 return;
             }
             else {
@@ -408,31 +406,31 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             if (mess.as_object().find("move") != mess.as_object().cend()) {
                     std::string direction = mess.as_object().at("move").as_string().c_str();   
                     if (direction == "") {
-                    ptr_player->GetDogPtr()->SetSpeed({0,0});
-                    ptr_player->GetDogPtr()->SetDirection("");
+                        ptr_player->GetDogPtr()->SetSpeed({0,0});
+                        ptr_player->GetDogPtr()->SetDirection("");
                     }  
 
                     const double map_speed = game_.FindMap(game_.FindPlayerMap(ptr_player))->GetSpeed();
                     
                     if (direction == "L") {
-                    ptr_player->GetDogPtr()->SetSpeed({ 0 - map_speed, 0 });
-                    ptr_player->GetDogPtr()->SetDirection("L");
+                        ptr_player->GetDogPtr()->SetSpeed({ 0 - map_speed, 0 });
+                        ptr_player->GetDogPtr()->SetDirection("L");
                     }
                     else if (direction == "R") {
-                    ptr_player->GetDogPtr()->SetSpeed({ map_speed, 0 });
-                    ptr_player->GetDogPtr()->SetDirection("R");
+                        ptr_player->GetDogPtr()->SetSpeed({ map_speed, 0 });
+                        ptr_player->GetDogPtr()->SetDirection("R");
                     }
                     else if (direction == "U") {
-                    ptr_player->GetDogPtr()->SetSpeed({ 0, 0 - map_speed });
-                    ptr_player->GetDogPtr()->SetDirection("U");
+                        ptr_player->GetDogPtr()->SetSpeed({ 0, 0 - map_speed });
+                        ptr_player->GetDogPtr()->SetDirection("U");
                     }
                     else if (direction == "D") {
-                    ptr_player->GetDogPtr()->SetSpeed({ 0, map_speed });
-                    ptr_player->GetDogPtr()->SetDirection("D");
+                        ptr_player->GetDogPtr()->SetSpeed({ 0, map_speed });
+                        ptr_player->GetDogPtr()->SetDirection("D");
                     }
                     else {
-                    MakeBadRequestError (req, send);
-                    return;
+                        MakeBadRequestError (req, send);
+                        return;
                     }
                 json::object finish;
 
