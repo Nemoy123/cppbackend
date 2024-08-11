@@ -32,6 +32,8 @@ public:
     std::vector<std::string> FindPlayersOnMap (const Map::Id& id, const bool names = true) const;
 
     void TimeUpdate (const uint64_t time);
+    void SetDefaultSpeed (double speed);
+    const double GetDefaultSpeed () const;
     
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
@@ -44,5 +46,6 @@ private:
     std::shared_ptr <Players> players = std::make_shared<Players> (); // все игроки
     std::unique_ptr <PlayersTokens> players_tokens_ = std::make_unique<PlayersTokens> (); // токены
     Strand time_strand_;
+    double defaultDogSpeed = 1.0;
  
 };

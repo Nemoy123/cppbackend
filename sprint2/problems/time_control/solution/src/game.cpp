@@ -174,3 +174,11 @@ Map::Id Game::FindPlayerMap (const std::shared_ptr <Player>& player) const {
     }
     return Map::Id{""};
 }
+
+void Game::SetDefaultSpeed (double speed) {
+    defaultDogSpeed = speed;
+}
+
+const double Game::GetDefaultSpeed () const {
+    return defaultDogSpeed;
+}

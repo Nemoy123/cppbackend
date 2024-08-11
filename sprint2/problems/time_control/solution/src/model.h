@@ -176,7 +176,7 @@ private:
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
-    double default_dog_speed_ = 1.0;
+    double dogSpeed = -1;
 
     // // начальная мЕньшая и конечная бОльшая точка горизонтальной дороги (+ точки вертикальных дорог )
     // std::vector <std::pair <double, double> >  horiz_roads_; 

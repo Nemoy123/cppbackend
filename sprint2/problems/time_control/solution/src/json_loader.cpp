@@ -108,10 +108,13 @@ Game LoadGame(Strand& strand, const std::filesystem::path& json_path) {
     //model::Map(Id id, std::string name)
     if (!value.is_object()) { throw ParseError("Input Error JSON bad format");}
 
-    double default_map_speed = 0;
+    double default_map_speed = -1;
     if (value.as_object().find ("defaultDogSpeed") != value.as_object().end()) {
         default_map_speed = value.as_object().at ("defaultDogSpeed").as_double();
+    } else {
+        default_map_speed = 1;
     }
+    game.SetDefaultSpeed(default_map_speed);
 
     if (value.as_object().find ("maps") == value.as_object().end()) {throw ParseError("Input Error JSON no maps");} 
     //далее вектор мапов value.as_object().at ("maps")
@@ -124,7 +127,7 @@ Game LoadGame(Strand& strand, const std::filesystem::path& json_path) {
         json::array roads {};
         json::array buildings {};
         json::array offices {};
-        double map_speed = 0;    
+        double map_speed = -1;    
         for (const auto& [key, val] : gamemap.as_object()) {
             if (key == "id") {id = val.as_string();}
             else if (key == "name") {name = val.as_string();}
@@ -146,9 +149,8 @@ Game LoadGame(Strand& strand, const std::filesystem::path& json_path) {
         for (const auto& off : ParseOffices(offices)) {
             map.AddOffice(off);
         }
-        if (default_map_speed > 0) {
-            map_speed > 0 ? map.SetSpeed (map_speed) : map.SetSpeed (default_map_speed);
-        }
+        map_speed > -1 ? map.SetSpeed (map_speed) : map.SetSpeed ( game.GetDefaultSpeed() );
+        
         game.AddMap(std::move(map));
     }
     

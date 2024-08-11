@@ -254,7 +254,7 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
                 arr.push_back(obj);
             }
             std::string res = json::serialize(arr);
-            send(text_response(http::status::ok, res));
+            send(text_response_nocache(http::status::ok, res));
             return;
         }
         else if (req.target().starts_with ("/api/v1/maps/") && req.target().size() > 13) {
@@ -262,11 +262,15 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             const auto ptr_map  = (game_.FindMap(model::Map::Id{map_name}));
             if (ptr_map != nullptr) {
                 boost::json::object val;
-                val["id"] = *(ptr_map->GetId());
+                // std::string mapstr {*(ptr_map->GetId())};
+                // val["id"] = mapstr;
+                val["id"] = boost::json::string {*(ptr_map->GetId())};
                 val["name"] = ptr_map->GetName();
                 val["roads"] = json_loader::GetJsonRoads(*ptr_map);
                 val["buildings"] = json_loader::GetJsonBuildings(*ptr_map);
                 val["offices"] = json_loader::GetJsonOffices(*ptr_map);
+                //json::value speed = ptr_map->GetSpeed();
+                //val["dogSpeed"] = ptr_map->GetSpeed();
                 send(text_response(http::status::ok, json::serialize(val)));
                 return;
             }
@@ -430,8 +434,9 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
                     MakeBadRequestError (req, send);
                     return;
                     }
+                json::object finish;
 
-                send(text_response_nocache(http::status::ok, {})); 
+                send(text_response_nocache(http::status::ok, serialize(finish))); 
 
             } else {
                 MakeBadRequestError (req, send);

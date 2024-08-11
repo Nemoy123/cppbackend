@@ -24,12 +24,12 @@ void Map::AddOffice(Office office) {
 
 void Map::SetSpeed (double speed) {
     if (speed > 0) {
-        default_dog_speed_ = speed;
+        dogSpeed = speed;
     }
 }
 
 const double Map::GetSpeed () const {
-    return default_dog_speed_;
+    return dogSpeed;
 }
 
 void Map::AddRoad(const Road& road) {
