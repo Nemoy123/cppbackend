@@ -108,17 +108,7 @@ private:
     
 };
 
-// template <typename Fn, typename Request, typename Send>
-// StringResponse ExecuteAuthorized(Fn&& action, Request&& req, Send&& send) {
-//     if (std::shared_ptr <Player> player = TryExtractToken(req)) {
-//         return action(*token);
-//     } else {
-//         return MakeUnauthorizedError(req, send);
-//     }
-// }
-
-
- template <typename Request, typename Send>
+template <typename Request, typename Send>
 void RequestHandler::MakeBadRequestError (Request&& req, Send&& send) {
     bool nocache = true;
     bool keep_alive = false;
@@ -294,9 +284,7 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             std::string mapid {};
             try {
                 json::value user = json::parse(req.body());
-                //user_name = serialize (user.as_object().at ("userName"));
                 user_name = user.as_object().at ("userName").as_string();
-                //mapid = serialize (user.as_object().at ("mapId"));
                 mapid = user.as_object().at ("mapId").as_string();
             } catch (...) {
                     json::object obj;
@@ -462,9 +450,6 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             } else {
                 MakeBadRequestError (req, send); return;
             }
-            // auto ptr_player = TryExtractToken(req, send);
-            // if (ptr_player == nullptr) {return;}; 
-            
                        
             game_.TimeUpdate (time);
             json::object finish;
@@ -515,23 +500,19 @@ void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator
                         return;
                     } catch (...) {
                         std::cout << "Strand Error"<< std::endl;
-                        //send(self->ReportServerError(version, keep_alive));
+                        
                     }
                 };
                 net::dispatch(api_strand_, handle);
                 return;
-                    // ApiHandler (req, send); 
-                    // return;
+                   
             }
-        
-            
+                    
             boost::json::object val;
             val["code"] = "badRequest";
             val["message"] = "Bad request";
             send(text_response(http::status::bad_request, json::serialize(val)));
-        
-            
-             
+                     
 }
 
 
@@ -593,7 +574,6 @@ std::string RequestHandler::TypeIdentity (const std::string_view in) const {
         else if (ft == ".css") { return "text/css";}
         else if (ft == ".txt") { return "text/plain";}
         else if (ft == ".js" ) { return "text/javascript";}
-        else if (ft == ".js" ) { return "text/javascript"; }
         else if (ft == ".json" ) { return "application/json"; }
         else if (ft == ".xml" ) { return "application/xml"; }
         else if (ft == ".png" ) { return "image/png";}

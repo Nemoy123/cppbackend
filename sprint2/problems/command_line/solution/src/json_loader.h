@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include <boost/json.hpp>
-//#include "model.h"
 #include "game.h"
 
 namespace json_loader {

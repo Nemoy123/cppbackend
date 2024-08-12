@@ -105,7 +105,6 @@ Game LoadGame(Strand& strand, const std::filesystem::path& json_path) {
     in.close(); 
 
     auto value = json::parse(res);
-    //model::Map(Id id, std::string name)
     if (!value.is_object()) { throw ParseError("Input Error JSON bad format");}
 
     double default_map_speed = -1;

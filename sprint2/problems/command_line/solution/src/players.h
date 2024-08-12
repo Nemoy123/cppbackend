@@ -4,7 +4,6 @@
 #include <memory>
 
 #include "model.h"
-//#include "gamesession.h"
 #include "token.h"
 #include "tagged.h"
 
@@ -21,11 +20,12 @@ struct Speed {
     double y = 0;
 };
 
-static uint64_t id = 0;
+
 
 class Dog {
     public:
-        Dog (std::string name) : name_(name), id_(id++) {}
+        static uint64_t static_id;
+        explicit Dog (std::string name) : name_(name), id_(static_id++) {}
         std::string GetIdString() const ;
         uint64_t GetId() const;
         const std::string& GetName() const;
@@ -37,26 +37,26 @@ class Dog {
         void SetSpeed(Speed&& speed);
         void SetPosition(Pos&& pos) {pos_=std::move(pos);}
     private:
+        
         std::string name_{};
         uint64_t id_ = 0;
         Pos pos_;
         Speed speed_;
+        
         std::string dir_{"U"};
 };
 
 
+
 class Player {
     public:
-        Player (const std::shared_ptr<Dog>& dog) : dog_(dog){}
+        explicit Player (const std::shared_ptr<Dog>& dog) : dog_(dog){}
         Player () {}
-        //Player (std::shared_ptr<Dog> dog, std::shared_ptr <GameSession> session) : dog_(dog), session_(session) {}
         std::string GetDogIdString () const  {return dog_->GetIdString();}
         std::shared_ptr<Dog> GetDogPtr() {return dog_;}
         void SetDog (const std::shared_ptr<Dog>& dog) {dog_ = dog;}
     private:
-        std::shared_ptr<Dog> dog_ = nullptr;
-        //std::shared_ptr <GameSession> session_ = nullptr;
-        
+        std::shared_ptr<Dog> dog_ = nullptr;        
 };
 
 template<typename T>
