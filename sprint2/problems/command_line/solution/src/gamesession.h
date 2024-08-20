@@ -30,11 +30,11 @@ class GameSession {
         const std::unordered_map <uint64_t, std::shared_ptr <Dog>>& GetAllDogs () const {return dogs_;} 
         std::unordered_map <uint64_t, std::shared_ptr <Dog>>& GetAllDogs () {return dogs_;} 
         uint64_t AddDog (const std::string& name);
-        Map* GetMap () {return gamemap_ptr;}
-        void SetMap ( Map* map) {gamemap_ptr = map;}
+        Map* GetMap () {return gamemap_ptr_;}
+        void SetMap ( Map* map) {gamemap_ptr_ = map;}
     private:
         std::unordered_map <uint64_t, std::shared_ptr <Dog>> dogs_{};
-        uint64_t dogs_id = 0;
-        Map* gamemap_ptr = nullptr;
+        uint64_t dogs_id_ = 0;
+        Map* gamemap_ptr_ = nullptr;
         
 };

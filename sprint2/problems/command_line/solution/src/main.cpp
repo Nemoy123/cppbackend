@@ -87,22 +87,11 @@ int main(int argc, const char* argv[]) {
 
 
         }
-        /* Если копировать файлы не нужно, то попадём сюда */
-        //return EXIT_SUCCESS;
+        
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
-
-
-        // if (argc != 3) {
-        //     std::cerr << "Usage: game_server <game-config-json> <files>"sv << std::endl;
-        //     return EXIT_FAILURE;
-        // }
-        // std::filesystem::path json_config = std::filesystem::canonical(argv[1]);
-        // std::filesystem::path json_path_files  = std::filesystem::canonical(argv[2]);
-        
        
     try {
         // 2. Инициализируем io_context
@@ -110,12 +99,8 @@ int main(int argc, const char* argv[]) {
             net::io_context ioc(num_threads);
         // strand для выполнения запросов к API
             auto api_strand = net::make_strand(ioc);
-           // auto time_strand = net::make_strand(ioc);
-        // 1. Загружаем карту из файла и построить модель игры
-        
-            //model::Game game = json_loader::LoadGame("test.json");
 
-           Game game = json_loader::LoadGame(api_strand, json_config);
+            Game game = json_loader::LoadGame(api_strand, json_config);
            game.SetRandomize(randomize);
             
 
@@ -131,13 +116,7 @@ int main(int argc, const char* argv[]) {
                     return;
                 }
             });
-        // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-            // std::filesystem::path json_path_files = std::filesystem::weakly_canonical(argv[2]);
-            // if (!std::filesystem::is_directory(json_path_files)) {
-            //     std::string temp = argv[2];
-            //     temp = temp.substr(1);
-            //     json_path_files = std::filesystem::path{std::filesystem::weakly_canonical(std::move(temp))};
-            // }
+        
             std::error_code ec;
             if (!std::filesystem::is_directory(json_path_files, ec)) {
                 
@@ -149,15 +128,7 @@ int main(int argc, const char* argv[]) {
             // Создаём обработчик запросов в куче, управляемый shared_ptr
             auto handler = std::make_shared<http_handler::RequestHandler>(game, json_path_files, api_strand);   
             // Оборачиваем его в логирующий декоратор
-            // LoggingRequestHandler<http_handler::RequestHandler> logging_handler{
-            //     [handler](auto&& req, auto&& send) {
-            //         // Обрабатываем запрос
-            //         (*handler)( req, send);
-            //         // std::forward<decltype(req)>(req),
-            //         // std::forward<decltype(send)>(send));
-            // }};
-
-            //http_handler::RequestHandler handler{game, json_path_files};
+            
             LoggingRequestHandler<http_handler::RequestHandler> logging_handler{*handler};
 
             if (!testing) {
@@ -172,27 +143,20 @@ int main(int argc, const char* argv[]) {
         constexpr net::ip::port_type port = 8080;
         http_server::ServeHttp(ioc, {address, port}, [&logging_handler](auto&& req, auto&& send) {
             logging_handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
-            // auto send_f = logging_handler(std::forward<decltype(req)>(req));
-            // send = std::move(send_f);
-            
         });
-        //std::cout << "Server has started"sv << std::endl;
-        //LogInfoMessage ("Server has started");
-        StartServer(port, address.to_string());
-        // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-        //std::cout << "Server has started..."sv << std::endl;
         
+        StartServer(port, address.to_string());        
 
         // 6. Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] {
             ioc.run();
         });
     } catch (const std::exception& ex) {
-        //std::cerr << ex.what() << std::endl;
+      
         StopServer(EXIT_FAILURE, ex);
         return EXIT_FAILURE;
     }
-    //StopServer(EXIT_SUCCESS, std::nullopt);
+   
     return EXIT_SUCCESS;
 }
 

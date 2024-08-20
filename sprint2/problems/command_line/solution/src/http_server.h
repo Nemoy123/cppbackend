@@ -14,21 +14,12 @@ namespace http_server {
 
 using namespace std::literals;
 
-// void ReportError(boost::beast::error_code ec, std::string_view what) {
-//     //std::cerr << what << ": "sv << ec.message() << std::endl;
-//     LogNetError ()
-    
-// }
-
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace sys = boost::system;
 using HttpRequest = http::request<http::string_body>;
-
-
-
 
 class SessionBase {
 public:

@@ -48,11 +48,7 @@ public:
         std::chrono::system_clock::time_point start_timer = std::chrono::system_clock::now();
 
         auto inter_send = [&](auto&& func) {
-                
-                
-                // std::chrono::system_clock::time_point end_timer = std::chrono::system_clock::now();
-                //     auto dur_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_timer - start_timer);
-                
+                                
                 if constexpr (std::is_same_v<http::response<http::string_body>, std::decay_t<decltype(func)>>) {
                      std::lock_guard rty (m_);
                     LogResponse(start_timer, func.result_int(), func.at(http::field::content_type), ip);
@@ -69,7 +65,7 @@ public:
         decorated_(std::move(req), std::move(inter_send));
     }
 
-    LoggingRequestHandler (SomeRequestHandler& deco) : decorated_(deco) {}
+    explicit LoggingRequestHandler (SomeRequestHandler& deco) : decorated_(deco) {}
     
 private:
     SomeRequestHandler& decorated_;
@@ -81,9 +77,7 @@ void Formatter(logging::record_view const& rec, logging::formatting_ostream& str
     
     auto ts = *rec[timestamp];
     auto obj = logging::extract<json::value>("AdditionalData", rec);
-    //auto jsonobj = *obj;
-    //jsonobj.as_object()["timestamp"] = to_iso_extended_string(ts);
-    
+       
     strm <<"{";
     strm << "\"timestamp\":" << json::serialize(to_iso_extended_string(ts)) << ",";
     if (obj->as_object().contains("data")) {
@@ -108,28 +102,20 @@ void LoggingRequestHandler<SomeRequestHandler>::LogRequest(const Request& r, std
     total["URI"] = r.target();
     total["method"] = r.method_string();
     custom_data.as_object()["data"] = std::move(total);
-    
-    // logging::add_console_log( 
-    //     std::cout,
-    //     keywords::format = &Formatter,
-    //     keywords::auto_flush = true
-    // ); 
-    
+      
     BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, custom_data);
 
 }
 
 template<class SomeRequestHandler>
 void LoggingRequestHandler<SomeRequestHandler>::LogResponse(auto& time, auto code, auto conttype, std::string& ip) { 
-    //std::lock_guard rty (m_);
-    std::chrono::system_clock::time_point end_timer = std::chrono::system_clock::now();
+        std::chrono::system_clock::time_point end_timer = std::chrono::system_clock::now();
     auto dur_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_timer - time);
     json::object total;
     total ["message"] = "response sent"s;
 
     json::value custom_data {std::move(total)};
 
-    // tempor test = r;
     total["ip"] = ip;
     total["response_time"] = dur_time.count();
     total["code"] = code;
@@ -138,9 +124,8 @@ void LoggingRequestHandler<SomeRequestHandler>::LogResponse(auto& time, auto cod
     
     BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, custom_data);
 }
-//{"timestamp":"2022-09-17T01:04:59.563314","data":{"ip":"127.0.0.1","response_time":4,"code":200,"content_type":"image/svg+xml"},"message":"response sent"}
 
-void StartServer (const unsigned short& port, const std::string& adr) {
+void StartServer (const uint16_t& port, const std::string& adr) {
     logging::add_common_attributes();
     json::object total;
     total ["message"] = "server started"s;
@@ -166,7 +151,7 @@ void StopServer (const bool code, const std::optional<std::exception>& exc) {
     json::value custom_data {std::move(total)};
 
     json::object date;
-    date["code"] = (int)code;
+    date["code"] = static_cast<int>(code);
     if (exc.has_value()) {
         date["exception"] = exc.value().what();
     }

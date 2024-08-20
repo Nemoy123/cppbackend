@@ -1,5 +1,6 @@
 #include "players.h"
 
+uint64_t Dog::static_id = 0;
 
 Token PlayersTokens::GiveTokenNewPlayer (std::shared_ptr<Player> player) {
     
@@ -20,7 +21,6 @@ std::shared_ptr<Player> PlayersTokens::FindPlayerByToken (Token& token) const {
 }
 
 std::shared_ptr<Player> PlayersTokens::FindPlayerByTokenString (const std::string& token) const {
-    //detail::Token, std::shared_ptr<Player
     for  (const auto& [tok, pla_ptr]: map_tokens_) {
         if (tok.token_string_ == token) return pla_ptr;
     }

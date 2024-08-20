@@ -16,13 +16,6 @@ std::shared_ptr <Dog> GameSession::GetDog (uint64_t id_dog) const {
             return dogs_.contains(id_dog) ? dogs_.at(id_dog) : nullptr;
 }
 
-// std::shared_ptr<Player> Players::AddNewPlayerToSession (std::string& dog_name, std::shared_ptr <GameSession>  session) {
-//     uint64_t new_dog = session->AddDog(dog_name);
-//     std::string map_stroke = *(session->GetMap()->GetId());
-//     map_players_[std::pair{new_dog, map_stroke}] = std::make_shared<Player> (session->GetDog(new_dog), session);
-//     return map_players_[std::pair{new_dog, map_stroke}];
-// }
-
 std::shared_ptr<Player> Players::AddPlayer (uint64_t dog_id, std::string& map_id) {
     map_players_[std::pair{dog_id, map_id}] = std::make_shared<Player>();
     return map_players_[std::pair{dog_id, map_id}];

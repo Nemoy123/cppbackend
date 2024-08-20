@@ -49,11 +49,7 @@ public:
     // Так в C++20 можно объявить оператор сравнения Tagged-типов
     // Будет просто вызван соответствующий оператор для поля value_
     auto operator<=>(const Tagged<Value, Tag>&) const = default;
-   
-    
-    // bool operator==( const Tagged<Value, Tag>& other ) const
-    //  { return other == *this;}
-
+       
 private:
     Value value_;
 };
