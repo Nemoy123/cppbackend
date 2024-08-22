@@ -18,7 +18,9 @@ FROM gcc:13.2 AS build
 # Запуск conan как раньше
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
-    conan install .. --build=missing -s compiler.libcxx=libstdc++11 -s build_type=Release
+	sudo apt install g++-13 && \
+    conan install .. --build=missing -s compiler.libcxx=libstdc++11 -s build_type=Release &&
+	sudo apt-get install libboost-all-dev=1.83.0.1ubuntu2
 
 
 COPY ./src /app/src
