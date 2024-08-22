@@ -1,9 +1,8 @@
 import argparse
-import subprocess
-import time
 import random
 import shlex
 import os
+import subprocess, signal, time
 
 RANDOM_LIMIT = 1000
 SEED = 123456789
@@ -26,13 +25,14 @@ def start_server():
 
 def run(command, output=None):
     
-    process = subprocess.Popen(command, stdout=output, shell=True)
+    process = subprocess.Popen(shlex.split(command), stdout=output, shell=False)
     return process
 
 
 def stop(process, wait=False):
     if process.poll() is None and wait:
         process.wait()
+    
     process.terminate()
 
 
@@ -50,25 +50,32 @@ def make_shots():
     
 # server = subprocess.Popen(start_server() + ' && perf record -o perf.data -p $!', shell=True)
 
-server = subprocess.Popen(start_server(), shell=True)
-record = subprocess.Popen('perf record -o perf.data -p ' + str(server.pid), shell=True)
+server = run(start_server())
+record = subprocess.Popen('perf record -o perf.data -g -p ' + str(server.pid), shell=True, preexec_fn=os.setsid)
 # tmp = 'perf record -o perf.data -p '
 # tmp = tmp + str(server.pid)
 # record = subprocess.Popen(tmp, shell=True)
 
 make_shots()
 
-
+#record.send_signal(signal.CTRL_C_EVENT)   
+os.killpg(os.getpgid(record.pid), signal.SIGTERM)
 stop(record)
-stop(server)
 time.sleep(1)
+#os.killpg(os.getpgid(server.pid), signal.SIGTERM)
+stop(server)
+#server.send_signal(signal.CTRL_C_EVENT) 
+time.sleep(1)
+
 #perf_script()
-# os.system('sudo perf script -i perf.data && sudo ./FlameGraph/stackcollapse-perf.pl perf.data | sudo ./FlameGraph/flamegraph.pl > graph.svg')
-first_mess = subprocess.Popen(shlex.split('perf script -f -i perf.data'), stdout=subprocess.PIPE)
-second_mess = subprocess.Popen('./FlameGraph/stackcollapse-perf.pl', stdin=first_mess.stdout, stdout=subprocess.PIPE)
-third_mess = subprocess.Popen(shlex.split('./FlameGraph/flamegraph.pl', '>', 'graph.svg'), stdin=second_mess.stdout)
-first_mess.stdout.close()
-second_mess.stdout.close()
+os.system('sudo perf script -i perf.data | sudo ./FlameGraph/stackcollapse-perf.pl | sudo ./FlameGraph/flamegraph.pl > graph.svg')
+# first_mess = subprocess.Popen(shlex.split('perf script -f -i perf.data'), stdout=subprocess.PIPE)
+# time.sleep(1)
+# second_mess = subprocess.Popen('./FlameGraph/stackcollapse-perf.pl', stdin=first_mess.stdout, stdout=subprocess.PIPE)
+# time.sleep(1)
+# third_mess = subprocess.Popen(shlex.split('./FlameGraph/flamegraph.pl', '>', 'graph.svg'), stdin=second_mess.stdout)
+# first_mess.stdout.close()
+# second_mess.stdout.close()
 #output = third_mess.comunicate()[0]
 # os.system('sudo perf script -i perf.data | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg')
 
