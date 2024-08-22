@@ -18,8 +18,6 @@ FROM gcc:13.2 AS build
 # Запуск conan как раньше
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
-    sudo apt install g++-13.2 && \
-	export CXX=/usr/bin/g++ && \
     conan install .. --build=missing
 
 
