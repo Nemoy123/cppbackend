@@ -18,7 +18,7 @@ FROM gcc:13.2 AS build
 # Запуск conan как раньше
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
-    conan install .. --build=missing
+    conan install .. --build=missing -s compiler.libcxx=libstdc++11 -s build_type=Release
 
 
 COPY ./src /app/src
