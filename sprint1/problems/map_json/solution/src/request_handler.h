@@ -33,7 +33,7 @@ public:
                                     bool keep_alive,
                                     std::string_view content_type = ContentType::JSON) {
         StringResponse response(status, http_version);
-        response.set(http::field::content_type, content_type);
+        response.set(http::field::content_type, std::string{content_type});
         response.body() = body;
         response.content_length(body.size());
         response.keep_alive(keep_alive);
