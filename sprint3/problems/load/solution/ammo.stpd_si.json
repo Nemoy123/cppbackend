@@ -1,15 +1,15 @@
 {
-    "loop_count": 151499,
+    "loop_count": 146999,
     "steps": [
         [
-            10100,
+            9800,
             30.0
         ]
     ],
     "loadscheme": [
-        "const(10100,30s)"
+        "const(9800,30s)"
     ],
     "duration": 30.0,
-    "ammo_count": 303000,
+    "ammo_count": 294000,
     "instances": 1000
 }
