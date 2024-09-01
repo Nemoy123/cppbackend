@@ -18,7 +18,9 @@ autostop:
   autostop:
 
      # - http(5xx,10%,5s)
-      - time (15ms, 1ms)
+     #  - time (15ms, 1ms)
+      - quantile (90,50ms,0ms)
+      - quantile (50,35ms,0ms)
        
 console:
   enabled: true                          # отображение в консоли процесса стрельбы 
