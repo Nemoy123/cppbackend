@@ -18,7 +18,7 @@ autostop:
   autostop:
 
      # - http(5xx,10%,5s)
-      - time (33ms, 1ms)
+      - time (15ms, 1ms)
        
 console:
   enabled: true                          # отображение в консоли процесса стрельбы 
