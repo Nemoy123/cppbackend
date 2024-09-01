@@ -10,8 +10,10 @@ phantom:
                                         # указать кол-во потоков для обстрела 
                                         # максимальном возможным rps, генерируемым 
                                         # каждым потоком)
-    schedule:  # const(1000,30s)
-        line(100, 15000, 1m)             # линейный профиль от 5 до 30 rps в течение 
+    schedule:  
+        step(4000,17000,100,1s)
+    # const(1000,30s)
+     #    line(5000, 20000, 5m)             # линейный профиль от 5 до 30 rps в течение 
                                         # минуты
   ssl: false                            # если нужна поддержка https, то true
 autostop:
@@ -19,8 +21,8 @@ autostop:
 
      # - http(5xx,10%,5s)
      #  - time (15ms, 1ms)
-      - quantile (90,49ms,1ms)
-      - quantile (50,34ms,1ms)
+      - quantile (90,48ms,1ms)
+      - quantile (50,33ms,1ms)
        
 console:
   enabled: true                          # отображение в консоли процесса стрельбы 
