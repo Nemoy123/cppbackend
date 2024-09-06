@@ -4,6 +4,7 @@
 #include <boost/json.hpp>
 #include "game.h"
 #include "loot_generator.h"
+#include "json_map_loader.h"
 
 using namespace loot_gen;
 
@@ -17,5 +18,6 @@ boost::json::array GetJsonRoads (const model::Map& gamemap);
 boost::json::array GetJsonBuildings (const model::Map& gamemap);
 boost::json::array GetJsonOffices (const model::Map& gamemap);
 boost::json::array GetLootTypes (const model::Map& gamemap);
+// std::optional <Map> MapConstruction (const boost::json::value& val);
 
 }  // namespace json_loader

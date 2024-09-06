@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <random>
 
 namespace model {
 using namespace std::literals;
@@ -56,5 +57,35 @@ void Map::AddRoad(const Road& road) {
         }
         
 }
+
+void Map::AddLoot(int num) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(0, (GetLootDescription().size())-1);
+    
+    for (auto i =0; i < num; ++i) {
+        
+        Loot loot;
+        loot.type = distr(gen);
+        std::uniform_int_distribution<> road_distr(0, ((GetRoads().size())-1));
+        auto* road_ptr = &(GetRoads().at(road_distr(gen)));
+        
+        if (road_ptr->IsHorizontal()) {
+            std::uniform_int_distribution<> road_coor(std::min(road_ptr->GetStart().x, road_ptr->GetEnd().x), 
+                                                      std::max(road_ptr->GetStart().x, road_ptr->GetEnd().x));
+            loot.y = road_ptr->GetStart().y;
+            loot.x = road_coor(gen);
+        } else {
+            
+            std::uniform_int_distribution<> road_coor(std::min(road_ptr->GetStart().y, road_ptr->GetEnd().y), 
+                                                      std::max(road_ptr->GetStart().y, road_ptr->GetEnd().y));
+            loot.x = road_ptr->GetStart().x;
+            loot.y = road_coor(gen);
+        }
+        loot_list_.push_back(std::move(loot));
+    }
+    
+}
+
 
 }  // namespace model

@@ -118,8 +118,15 @@ private:
     Offset offset_;
 };
 
+struct Loot {
+            int type = 0;
+            double x = 0.0;
+            double y = 0.0;
+};
+
 class Map {
 public:
+    
     using Id = util::Tagged<std::string, Map>;
     using Roads = std::vector<Road>;
     using Buildings = std::vector<Building>;
@@ -170,7 +177,8 @@ public:
     const double GetSpeed () const;
     const LootDescription& GetLootDescription() const {return loot_description_;}
     LootDescription& GetLootDescription() {return loot_description_;}
-
+    void AddLoot(int num);
+    const std::vector <Loot>& GetLootList () const  {return loot_list_;}
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, std::size_t, util::TaggedHasher<Office::Id>>;
@@ -188,6 +196,8 @@ private:
     RoadMap  vert_roads_;   // ключ горизонт, значение вектор отрезков вертикальной дороги
 
     LootDescription loot_description_; // ключ имя лута, мапа - описание 
+
+    std::vector <Loot> loot_list_;
 };
 
 

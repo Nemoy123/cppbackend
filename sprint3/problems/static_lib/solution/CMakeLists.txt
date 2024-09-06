@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.11)
 project(game_server CXX)
 set(CMAKE_CXX_STANDARD 20)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
+# include_directories(${CONAN_INCLUDE_DIRS_BOOST})
 
 find_package(Boost REQUIRED)
 if(Boost_FOUND)
@@ -22,6 +23,9 @@ add_library(MyLib STATIC
 		src/loot_generator.cpp 
 		src/loot_generator.h
 		src/tagged.h
+		src/json_map_loader.h
+		src/json_map_loader.cpp
+
 )
 
 # Добавляем сторонние библиотеки. Указываем видимость PUBLIC, т. к. 
@@ -42,8 +46,6 @@ add_executable(game_server
 	src/request_handler.h
 	src/game.h
 	src/game.cpp
-	src/gamesession.h
-	src/gamesession.cpp
 	src/logger.h
 	src/players.h
 	src/players.cpp
@@ -52,6 +54,8 @@ add_executable(game_server
 	src/token.cpp
 	src/parse_command_line.h
 	src/ticker.h
+	src/gamesession.h
+	src/gamesession.cpp
 )
 
 add_executable(game_server_tests

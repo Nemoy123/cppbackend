@@ -29,7 +29,7 @@ COPY CMakeLists.txt /app/
 
 RUN cd /app/build && \
     cmake -DCMAKE_BUILD_TYPE=Release .. && \
-    cmake --build . -j 12
+    cmake --build .
 
 
 # Второй контейнер в том же докерфайле

@@ -27,28 +27,26 @@ class Players {
 
 
 class GameSession {
-    struct Loot {
-        int type = 0;
-        double x = 0.0;
-        double y = 0.0;
-    };
-
-
     public:
+        // struct Loot {
+        //     int type = 0;
+        //     double x = 0.0;
+        //     double y = 0.0;
+        // };
         std::shared_ptr <Dog> GetDog (uint64_t id_dog) const;
         const std::unordered_map <uint64_t, std::shared_ptr <Dog>>& GetAllDogs () const {return dogs_;} 
         std::unordered_map <uint64_t, std::shared_ptr <Dog>>& GetAllDogs () {return dogs_;} 
         uint64_t AddDog (const std::string& name);
         Map* GetMap () {return gamemap_ptr_;}
         void SetMap ( Map* map) {gamemap_ptr_ = map;}
-        size_t GetLootCount () {return loot_list_.size();}
+        size_t GetLootCount () {return gamemap_ptr_->GetLootList().size();}
         void SetLootCount (int num) {loot_count_ = num;}
-        void AddLoot(int num);
-        const std::vector <Loot>& GetLootList () const  {return loot_list_;}
+        void AddLoot(int num) {gamemap_ptr_->AddLoot(num);};
+        const std::vector <Loot>& GetLootList () const  {return gamemap_ptr_->GetLootList();}
     private:
         std::unordered_map <uint64_t, std::shared_ptr <Dog>> dogs_{};
         uint64_t dogs_id_ = 0;
         Map* gamemap_ptr_ = nullptr;
         int loot_count_ = 0;
-        std::vector <Loot> loot_list_;
+        //std::vector <Loot> loot_list_;
 };
