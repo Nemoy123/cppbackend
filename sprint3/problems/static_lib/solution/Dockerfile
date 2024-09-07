@@ -50,6 +50,7 @@ FROM ubuntu:22.04 AS run
 # Не забываем также папку data, она пригодится.
 COPY --from=build /app/build/bin/game_server /app/
 COPY ./data /app/data
+COPY ./tests /app/tests
 COPY ./static /app/static
 # COPY --from=build app/data/config.json /app/data/config.json
 
