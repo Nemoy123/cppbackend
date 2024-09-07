@@ -66,4 +66,4 @@ USER www
 
 
 # Запускаем игровой сервер
-ENTRYPOINT ["/app/game_server", "-c../../data/config.json", "-w../../static/"]
+ENTRYPOINT ["/app/game_server", "-c/app/data/config.json", "-w/app/static/"]
