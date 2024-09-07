@@ -24,6 +24,7 @@ RUN mkdir /app/build && cd /app/build && \
 
 COPY ./src /app/src
 COPY ./static /app/static
+COPY ./tests /app/tests
 COPY ./data/config.json /app/data/config.json 
 COPY CMakeLists.txt /app/
 
