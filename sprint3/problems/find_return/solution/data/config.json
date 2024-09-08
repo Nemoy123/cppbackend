@@ -83,7 +83,7 @@
           "value": 10
         },
         {
-          "name": "key",
+          "name": "wallet",
           "file": "assets/key.obj",
           "type": "obj",
           "rotation": 90,
