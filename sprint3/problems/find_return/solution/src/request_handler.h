@@ -265,7 +265,8 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
                 val["buildings"] = json_loader::GetJsonBuildings(*ptr_map);
                 val["offices"] = json_loader::GetJsonOffices(*ptr_map);
                 val["lootTypes"] = json_loader::GetLootTypes (*ptr_map);
-                send(text_response_nocache(http::status::ok, json::serialize(val)));
+                std::string temp {json::serialize(val)};
+                send(text_response_nocache(http::status::ok, std::move(temp)));
                 return;
             }
             else {
@@ -369,6 +370,7 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
                 temp[json::string_view{"pos"}] = pos_val;
                 temp[json::string_view{"speed"}] = speed_val;
                 temp[json::string_view{"dir"}] = ptr_dog->GetDirection();
+                temp[json::string_view{"score"}] = ptr_dog->GetScore();
                 json::array bag;
                 for (const auto& loot : ptr_dog->GetLootBag()) {
                     if (loot != nullptr) {
@@ -386,18 +388,20 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             auto session_ptr = game_.GetSession(map_id);
             json::object loot_obj;
             for (auto i = 0; i < session_ptr->GetLootList().size(); ++i){
-                json::object loot_date;
-                loot_date["type"] = value_from( session_ptr->GetLootList().at(i)->type );
-                loot_date["pos"] = boost::json::array {session_ptr->GetLootList().at(i)->x, session_ptr->GetLootList().at(i)->y};
+                if (session_ptr->GetLootList().at(i) != nullptr) {
+                    json::object loot_date;
+                    loot_date["type"] = value_from( session_ptr->GetLootList().at(i)->type );
+                    loot_date["pos"] = boost::json::array {session_ptr->GetLootList().at(i)->x, session_ptr->GetLootList().at(i)->y};
 
-                loot_obj[std::to_string(i)] = loot_date;
+                    loot_obj[std::to_string(i)] = loot_date;
+                }
             }
             finish["lostObjects"] = std::move(loot_obj);
                 
             std::string temp2 = serialize(finish);
             send(text_response_nocache(http::status::ok, temp2));
         }
-    ///api/v1/game/player/action
+    
         else if (req.target().starts_with ("/api/v1/game/player/action") ) { 
             if (req.method_string() != "POST") { 
                 MakeInvalidMethodError (req,send,"POST");

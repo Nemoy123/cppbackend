@@ -9,8 +9,6 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/io_context.hpp>
 
-//#include "collision_detector.h"
-
 using namespace model;
 using namespace std::literals;
 namespace net = boost::asio;

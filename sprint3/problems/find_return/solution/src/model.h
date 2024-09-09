@@ -8,7 +8,6 @@
 #include <variant>
 #include <memory>
 
-//
 
 namespace model {
 

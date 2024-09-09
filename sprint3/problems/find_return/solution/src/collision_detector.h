@@ -21,9 +21,15 @@ struct CollectionResult {
 // Движемся из точки a в точку b и пытаемся подобрать точку c
 std::optional <CollectionResult> TryCollectPoint(geom::Point2D a, geom::Point2D b, geom::Point2D c);
 
+enum class Type {
+    ITEM,
+    BASE
+};
+
 struct Item {
     geom::Point2D position;
     double width;
+    Type type = Type::ITEM;
 };
 
 struct Gatherer {
@@ -51,7 +57,7 @@ struct GatheringEvent {
     double time;
 };
 
-//std::vector<GatheringEvent> FindGatherEvents(const ItemGathererProvider& provider);
+
 std::vector<GatheringEvent> FindGatherEvents(const ItemGathererProvider* provider);
 
 }  // namespace collision_detector

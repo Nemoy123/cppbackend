@@ -9,7 +9,6 @@ std::optional <CollectionResult> TryCollectPoint(geom::Point2D a, geom::Point2D 
     // Тут приходится использовать строгое равенство, а не приближённое,
     // пскольку при сборе заказов придётся учитывать перемещение даже на небольшое
     // расстояние.
-    //assert(b.x != a.x || b.y != a.y);
     if (b.x == a.x && b.y == a.y) {return std::nullopt;}
     const double u_x = c.x - a.x;
     const double u_y = c.y - a.y;
@@ -23,43 +22,6 @@ std::optional <CollectionResult> TryCollectPoint(geom::Point2D a, geom::Point2D 
 
     return CollectionResult(sq_distance, proj_ratio);
 }
-
-
-// std::vector<GatheringEvent> FindGatherEvents(const ItemGathererProvider& provider) {
-//     std::vector<GatheringEvent> detected_events;
-
-//     static auto eq_pt = [](geom::Point2D p1, geom::Point2D p2) {
-//         return p1.x == p2.x && p1.y == p2.y;
-//     };
-
-//     for (size_t g = 0; g < provider.GatherersCount(); ++g) {
-//         Gatherer gatherer = provider.GetGatherer(g);
-//         if (eq_pt(gatherer.start_pos, gatherer.end_pos)) {
-//             continue;
-//         }
-//         for (size_t i = 0; i < provider.ItemsCount(); ++i) {
-//             Item item = provider.GetItem(i);
-//             auto collect_result
-//                 = TryCollectPoint(gatherer.start_pos, gatherer.end_pos, item.position);
-//             if (collect_result.has_value()) {
-//                 if (collect_result.value().IsCollected(gatherer.width + item.width)) {
-//                     GatheringEvent evt{.item_id = i,
-//                                     .gatherer_id = g,
-//                                     .sq_distance = collect_result.value().sq_distance,
-//                                     .time = collect_result.value().proj_ratio};
-//                     detected_events.push_back(evt);
-//                 }
-//             }
-//         }
-//     }
-
-//     std::sort(detected_events.begin(), detected_events.end(),
-//               [](const GatheringEvent& e_l, const GatheringEvent& e_r) {
-//                   return e_l.time < e_r.time;
-//               });
-
-//     return detected_events;
-// }
 
 std::vector<GatheringEvent> FindGatherEvents(const ItemGathererProvider* provider) {
     std::vector<GatheringEvent> detected_events;

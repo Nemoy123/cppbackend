@@ -42,7 +42,7 @@ public:
 
     
     void operator () (auto&& req, auto&& resp) {
-        //std::lock_guard rty (m_);
+        
         std::string ip{};
         LogRequest(req,ip);
         std::chrono::system_clock::time_point start_timer = std::chrono::system_clock::now();

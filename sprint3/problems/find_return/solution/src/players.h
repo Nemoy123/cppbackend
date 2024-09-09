@@ -38,6 +38,9 @@ class Dog {
         void SetPosition(Pos&& pos) {pos_=std::move(pos);}
         std::vector <std::unique_ptr<Loot>>& GetLootBag () {return loot_bag_;}
         void AddLoot (std::unique_ptr<Loot> loot) {loot_bag_.push_back(std::move(loot));}
+        size_t& GetScore () {return score;}
+        const size_t& GetScore () const {return score;}
+        void SetScore (int num) {score = num;}
 
     private:
         
@@ -47,6 +50,7 @@ class Dog {
         Speed speed_;
         std::string dir_{"U"};
         std::vector <std::unique_ptr<Loot>> loot_bag_{};
+        size_t score = 0;
 };
 
 

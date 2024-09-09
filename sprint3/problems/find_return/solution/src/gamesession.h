@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
-//#include "tagged.h"
+
 #include "players.h"
 #include "model.h"
 #include "collision_detector.h"
@@ -40,6 +40,7 @@ class GameSession {
         std::unordered_map <uint64_t, std::shared_ptr <Dog>>& GetAllDogs () {return dogs_;} 
         uint64_t AddDog (const std::string& name);
         Map* GetMap () {return gamemap_ptr_;}
+        const Map* GetMap () const {return gamemap_ptr_;}
         void SetMap ( Map* map) {gamemap_ptr_ = map;}
         size_t GetLootCount () {return gamemap_ptr_->GetLootList().size();}
         void SetLootCount (int num) {loot_count_ = num;}
@@ -53,6 +54,7 @@ class GameSession {
         uint64_t dogs_id_ = 0;
         Map* gamemap_ptr_ = nullptr;
         int loot_count_ = 0;
+        
         
 };
 

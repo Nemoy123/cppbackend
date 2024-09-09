@@ -9,10 +9,10 @@ using namespace model;
 
 void Game::TimeUpdate (const uint64_t time) { 
         std::unordered_map <std::shared_ptr <GameSession>, CollisionPrepare> map_collision;
-        //std::vector <CollisionPrepare> list_prepare;
+        
         for (const auto& [id, session] : GetAllSessions ()) {
             auto collision = session->GetCollisionPrepare();
-            //list_prepare.push_back(std::move(collision));
+            
             map_collision[session] = std::move(collision);
         }
         
@@ -154,12 +154,6 @@ void Game::TimeUpdate (const uint64_t time) {
         }
 
     
-// struct GatheringEvent {
-//     size_t item_id;
-//     size_t gatherer_id;
-//     double sq_distance;
-//     double time;
-// };
     for (auto& [sess, prep]: map_collision) {
         if (sess)  {
             sess->HandlerCollision (prep);
