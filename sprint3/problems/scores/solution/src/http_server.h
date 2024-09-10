@@ -1,6 +1,5 @@
 #pragma once
 #include "sdk.h"
-//
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -27,23 +26,11 @@ public:
     SessionBase(const SessionBase&) = delete;
     SessionBase& operator=(const SessionBase&) = delete;
 
-    void Run() {
-        // Вызываем метод Read, используя executor объекта stream_.
-        // Таким образом вся работа со stream_ будет выполняться, используя его executor
-        net::dispatch(stream_.get_executor(),
-                  beast::bind_front_handler(&SessionBase::Read, GetSharedThis()));
-    }
-    template <typename Body, typename Fields>
-    void Write(http::response<Body, Fields>&& response) {
-        // Запись выполняется асинхронно, поэтому response перемещаем в область кучи
-        auto safe_response = std::make_shared<http::response<Body, Fields>>(std::move(response));
+    void Run();
 
-        auto self = GetSharedThis();
-        http::async_write(stream_, *safe_response,
-                          [safe_response, self](beast::error_code ec, std::size_t bytes_written) {
-                              self->OnWrite(safe_response->need_eof(), ec, bytes_written);
-                          });
-    }
+    template <typename Body, typename Fields>
+    void Write(http::response<Body, Fields>&& response);
+
 
 protected:
     
@@ -58,67 +45,22 @@ private:
     beast::flat_buffer buffer_;
     HttpRequest request_;
     
-    void Read() {
-        using namespace std::literals;
-        // Очищаем запрос от прежнего значения (метод Read может быть вызван несколько раз)
-        request_ = {};
-        
-        stream_.expires_after(30s);
-               
-        // Считываем request_ из stream_, используя buffer_ для хранения считанных данных
-        http::async_read(stream_, buffer_, request_,
-                         // По окончании операции будет вызван метод OnRead
-                         beast::bind_front_handler(&SessionBase::OnRead, GetSharedThis()));
-        
-    }
+    void Read();
 
-    void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read) {
-        
-        if (ec == http::error::end_of_stream) {
-            // Нормальная ситуация - клиент закрыл соединение
-            return Close();
-        }
-        if (ec) {
-            LogNetError ("read", ec.value(), ec.what());
-            //return ReportError(ec, "read"sv);
-            return;
-        }
+    void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read);
 
-        request_.set("ip", stream_.socket().remote_endpoint().address().to_string());
-        HandleRequest(std::move(request_));
-    }
-
-    void Close() {
-        beast::error_code ec;
-        stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
-        if (ec) {
-
-            //ReportError(ec, "socket shutdown"sv);
-            LogNetError ("read", ec.value(), "socket shutdown");
-        }
-    }
+    void Close();
 
         // Обработку запроса делегируем подклассу
     virtual void HandleRequest(HttpRequest&& request) = 0;
     virtual std::shared_ptr<SessionBase> GetSharedThis() = 0;
 
-    void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
-        if (ec) {
-            LogNetError ("write", ec.value(), ec.what());
-            //return ReportError(ec, "write"sv);
-            return;
-        }
-
-        if (close) {
-            // Семантика ответа требует закрыть соединение
-            return Close();
-        }
-
-        // Считываем следующий запрос
-        Read();
-    }
+    void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written);
 
 };
+
+
+
 
 template <typename RequestHandler>
 class Session : public SessionBase, public std::enable_shared_from_this<Session<RequestHandler>> {
@@ -149,7 +91,17 @@ private:
     }
 };
 
+template <typename Body, typename Fields>
+void SessionBase::Write(http::response<Body, Fields>&& response) {
+    // Запись выполняется асинхронно, поэтому response перемещаем в область кучи
+    auto safe_response = std::make_shared<http::response<Body, Fields>>(std::move(response));
 
+    auto self = GetSharedThis();
+    http::async_write(stream_, *safe_response,
+                        [safe_response, self](beast::error_code ec, std::size_t bytes_written) {
+                            self->OnWrite(safe_response->need_eof(), ec, bytes_written);
+                        });
+}
 
 
 template <typename RequestHandler>
@@ -211,8 +163,7 @@ private:
 
         if (ec) {
            
-            LogNetError ("accept", ec.value(), ec.what());  
-            //return ReportError(ec, "accept"sv);
+            logger::LogNetError ("accept"s, ec.value(), ec.what());  
             return;
         }
 

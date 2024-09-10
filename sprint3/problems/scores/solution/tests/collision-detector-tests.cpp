@@ -14,10 +14,10 @@ const double epsilon = 0E-10;
 std::random_device rd;
 std::mt19937 gen(rd());
 
-int Random(int low, int high)
+double Random(int low, int high)
 {
     std::uniform_int_distribution<> dist(low, high);
-    return dist(gen);
+    return static_cast<double> (dist(gen));
 }
 
 class TestClass : public ItemGathererProvider {

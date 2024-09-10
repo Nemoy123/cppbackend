@@ -41,7 +41,6 @@ add_executable(game_server
 	src/http_server.cpp
 	src/http_server.h
 	src/sdk.h
-	src/boost_json.cpp
 	src/json_loader.h
 	src/json_loader.cpp
 	src/request_handler.cpp
@@ -49,6 +48,7 @@ add_executable(game_server
 	src/game.h
 	src/game.cpp
 	src/logger.h
+	src/logger.cpp
 	src/players.h
 	src/players.cpp
 	src/tagged.h
@@ -58,7 +58,7 @@ add_executable(game_server
 	src/ticker.h
 	src/gamesession.h
 	src/gamesession.cpp
-	
+	src/serialize.h
 )
 
 add_executable(game_server_tests

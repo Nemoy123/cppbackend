@@ -7,13 +7,12 @@
 #include <boost/asio/signal_set.hpp>
 #include <optional>
 #include <chrono>
-
-//#include "logger.h"
 #include "parse_command_line.h"
 #include "game.h"
 #include "json_loader.h"
 #include "request_handler.h"
 #include "ticker.h"
+
 
 using namespace std::literals;
 namespace net = boost::asio;
@@ -115,7 +114,7 @@ int main(int argc, const char* argv[]) {
             net::signal_set signals(ioc, SIGINT, SIGTERM);
             signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
                 if (!ec) {
-                    StopServer(EXIT_SUCCESS, std::nullopt);
+                    logger::StopServer(EXIT_SUCCESS, std::nullopt);
                     ioc.stop();
                     return;
                 }
@@ -133,7 +132,7 @@ int main(int argc, const char* argv[]) {
             auto handler = std::make_shared<http_handler::RequestHandler>(game, json_path_files, api_strand);   
             // Оборачиваем его в логирующий декоратор
             
-            LoggingRequestHandler<http_handler::RequestHandler> logging_handler{*handler};
+            logger::LoggingRequestHandler<http_handler::RequestHandler> logging_handler{*handler};
             auto timer = std::chrono::high_resolution_clock::now();
            
             auto ticker = std::make_shared<Ticker>(api_strand, 50ms,
@@ -164,7 +163,7 @@ int main(int argc, const char* argv[]) {
             logging_handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
         
-        StartServer(port, address.to_string());        
+        logger::StartServer(port, address.to_string());        
 
         // 6. Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] {
@@ -172,7 +171,7 @@ int main(int argc, const char* argv[]) {
         });
     } catch (const std::exception& ex) {
       
-        StopServer(EXIT_FAILURE, ex);
+        logger::StopServer(EXIT_FAILURE, ex);
         return EXIT_FAILURE;
     }
    
