@@ -26,23 +26,27 @@ std::optional<LootGenerator> LoadLootGenerator (const std::filesystem::path& jso
     if (!value.is_object()) { throw ParseError("Input Error JSON bad format");}
     if (value.as_object().find ("lootGeneratorConfig") != value.as_object().end()) {
         try {
+
             if (    !value.at("lootGeneratorConfig").is_object() || 
                     !value.at("lootGeneratorConfig").as_object().contains("period") ||
                     !value.at("lootGeneratorConfig").as_object().contains("probability")
                 ) 
                 { throw ParseError("Input Error JSON LoadLootGenerator bad format"); }
             
+
             double val_seconds = value.at("lootGeneratorConfig").as_object().at("period").get_double();
             auto val_dur_seconds = std::chrono::duration<double, std::ratio<1>>(val_seconds);
             auto val_mili = std::chrono::duration_cast<std::chrono::milliseconds> (val_dur_seconds);
             loot_gen::LootGenerator::TimeInterval period = std::chrono::milliseconds(val_mili);
             double probability = value.at("lootGeneratorConfig").as_object().at("probability").get_double();
             return LootGenerator (period, probability);
+
         } 
               
         catch (const std::exception& ex) {
             const std::string mess = "Error JSON bad format: "s + ex.what();
             ParseError(mess.c_str());
+
         }
     } 
     return std::nullopt;
@@ -67,12 +71,15 @@ Game LoadGame(Strand& strand, const std::filesystem::path& json_path) {
     try {
         auto value = json::parse(res);
         if (!value.is_object()) { throw ParseError("Input Error JSON bad format");}
+
         double default_map_speed = -1;
+
         if (value.as_object().find ("defaultDogSpeed") != value.as_object().end()) {
             default_map_speed = value.as_object().at ("defaultDogSpeed").as_double();
         } else {
             default_map_speed = 1;
         }
+
         if (value.as_object().find ("defaultBagCapacity") != value.as_object().end()) {
             game.SetDefaultBagCapacity( value.as_object().at ("defaultBagCapacity").as_uint64());
         }
@@ -83,17 +90,20 @@ Game LoadGame(Strand& strand, const std::filesystem::path& json_path) {
         if (!value.as_object().at ("maps").is_array()) {
             throw ParseError("Input Error JSON - no array after map");
         }
+
         auto& vect_maps = value.as_object().at ("maps").as_array();
         for (const auto& gamemap : vect_maps) {
             
             auto map = MapConstruction(gamemap);
             if (map) {
+
                 if (map.value().GetSpeed() == -1) {
                     map.value().SetSpeed ( game.GetDefaultSpeed() );
                 }
                 if (map.value().GetBagCapacity() < 0) {
                     map.value().SetBagCapacity(game.GetDefaultBagCapacity());
                 }
+
                 game.AddMap(std::move(map.value()));
             } else {
                 throw ParseError("Input Error JSON");
@@ -160,6 +170,7 @@ boost::json::array GetLootTypes (const model::Map& gamemap) {
     }
     return val;
 }
+
 
 }  // namespace json_loader
 

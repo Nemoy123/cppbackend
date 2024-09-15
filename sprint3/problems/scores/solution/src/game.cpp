@@ -9,10 +9,12 @@ using namespace model;
 
 void Game::TimeUpdate (const uint64_t time) { 
         std::unordered_map <std::shared_ptr <GameSession>, CollisionPrepare> map_collision;
+
         
         for (const auto& [id, session] : GetAllSessions ()) {
             auto collision = session->GetCollisionPrepare();
             
+
             map_collision[session] = std::move(collision);
         }
         
@@ -154,6 +156,7 @@ void Game::TimeUpdate (const uint64_t time) {
         }
 
     
+
     for (auto& [sess, prep]: map_collision) {
         if (sess)  {
             sess->HandlerCollision (prep);

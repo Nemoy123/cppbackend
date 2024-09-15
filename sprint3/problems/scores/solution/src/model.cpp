@@ -65,7 +65,7 @@ void Map::AddLoot(int num) {
     
     for (auto i =0; i < num; ++i) {
         auto loot = std::make_unique <Loot> ();
-        
+
         loot->type = distr(gen);
         std::uniform_int_distribution<> road_distr(0, ((GetRoads().size())-1));
         auto* road_ptr = &(GetRoads().at(road_distr(gen)));

@@ -84,7 +84,7 @@
         },
         {
           "name": "wallet",
-          "file": "assets/key.obj",
+          "file": "assets/wallet.obj",
           "type": "obj",
           "rotation": 90,
           "color" : "#338844",

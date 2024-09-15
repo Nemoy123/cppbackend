@@ -1,5 +1,6 @@
 #pragma once
 #include "sdk.h"
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -26,10 +27,12 @@ public:
     SessionBase(const SessionBase&) = delete;
     SessionBase& operator=(const SessionBase&) = delete;
 
+
     void Run();
 
     template <typename Body, typename Fields>
     void Write(http::response<Body, Fields>&& response);
+
 
 
 protected:
@@ -45,16 +48,18 @@ private:
     beast::flat_buffer buffer_;
     HttpRequest request_;
     
+
     void Read();
 
     void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read);
 
     void Close();
 
+
         // Обработку запроса делегируем подклассу
     virtual void HandleRequest(HttpRequest&& request) = 0;
     virtual std::shared_ptr<SessionBase> GetSharedThis() = 0;
-
+  
     void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written);
 
 };
@@ -102,6 +107,7 @@ void SessionBase::Write(http::response<Body, Fields>&& response) {
                             self->OnWrite(safe_response->need_eof(), ec, bytes_written);
                         });
 }
+
 
 
 template <typename RequestHandler>
@@ -163,7 +169,9 @@ private:
 
         if (ec) {
            
+
             logger::LogNetError ("accept"s, ec.value(), ec.what());  
+
             return;
         }
 

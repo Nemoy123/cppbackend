@@ -10,7 +10,9 @@
 #include <boost/log/attributes/timer.hpp>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <boost/json.hpp>
+
 #include <chrono>
+
 
 
 
@@ -29,13 +31,15 @@ using Dur = std::chrono::system_clock::duration;
 BOOST_LOG_ATTRIBUTE_KEYWORD (additional_data, "AdditionalData", json::value)
 BOOST_LOG_ATTRIBUTE_KEYWORD (timestamp, "TimeStamp", boost::posix_time::ptime)
 
+
 namespace logger {
+
 
 // Шаблон Декоратор
 
 template<class SomeRequestHandler>
 class LoggingRequestHandler {
-     
+
     static void LogRequest(const Request& r, std::string& ip);
     static void LogResponse(auto& time, auto code, auto conttype, std::string& ip);
     static void LogResponse(auto& dur_time, auto& func);
@@ -58,6 +62,7 @@ void LogInfoMessage (const std::string&& msg);
 template<class SomeRequestHandler>
 void LoggingRequestHandler<SomeRequestHandler>::operator () (auto&& req, auto&& resp) {
         
+
         std::string ip{};
         LogRequest(req,ip);
         std::chrono::system_clock::time_point start_timer = std::chrono::system_clock::now();
@@ -78,7 +83,9 @@ void LoggingRequestHandler<SomeRequestHandler>::operator () (auto&& req, auto&& 
         };
 
         decorated_(std::move(req), std::move(inter_send));
+
 }
+
 
 template<class SomeRequestHandler>
 void LoggingRequestHandler<SomeRequestHandler>::LogRequest(const Request& r, std::string& ip) {
@@ -116,4 +123,6 @@ void LoggingRequestHandler<SomeRequestHandler>::LogResponse(auto& time, auto cod
     BOOST_LOG_TRIVIAL(info) << logging::add_value(additional_data, custom_data);
 }
 
+
 } // end namespace
+

@@ -58,6 +58,7 @@ add_executable(game_server
 	src/ticker.h
 	src/gamesession.h
 	src/gamesession.cpp
+
 )
 
 add_executable(game_server_tests

@@ -1,17 +1,20 @@
 #pragma once
 
 #include <filesystem>
+
 #include "http_server.h"
 #include "game.h"
 #include "json_loader.h"
 #include <sstream>
 #include "application.h"
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace json = boost::json;
 namespace sys = boost::system;
 namespace fs = std::filesystem;
 namespace net = boost::asio;
+
 
 namespace http_handler {
 
@@ -21,7 +24,9 @@ using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
 using namespace std::literals;
+
 using namespace app;
+
 
 struct ContentType {
     ContentType() = delete;
@@ -39,16 +44,19 @@ public:
         , files_path_(fs::weakly_canonical(files_path))
         , api_strand_ (api_strand)
         , application(game)
+
     {
     }
 
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
+
         // Создаёт StringResponse с заданными параметрами
     static StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version,
                                     bool keep_alive,
                                     std::string_view content_type = ContentType::JSON, bool nocache = false, std::string_view allow_method = {});
+
 
     template <typename FuncMakeResponse, typename FuncSend>
     void FileHandler (std::string_view target, FuncMakeResponse& funcmakestring, FuncSend& send);
@@ -64,6 +72,7 @@ private:
     Strand api_strand_;
     Application application;
 
+
     std::string TypeIdentity (const std::string_view in) const;
 
     std::optional<std::string> EncodeURL (std::string_view in) const;
@@ -71,10 +80,10 @@ private:
     bool IsSubPath(const fs::path& p) const;
 
     template <typename Request, typename Send>
+
     void ChangeMove (Request&& req, Send&& send);
     
 };
-
 
 template <typename FuncMakeResponse, typename FuncSend>
 void RequestHandler::FileHandler (std::string_view target, FuncMakeResponse& funcmakestring, FuncSend& send) {
@@ -155,6 +164,7 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             application.MakeBadRequestError (req, send);
             return;
         }
+
 }
 
 
@@ -196,8 +206,10 @@ void RequestHandler::operator()(http::request<Body, http::basic_fields<Allocator
                    
             }
 
+
             application.MakeBadRequestError (req, send);        
 }
+
 
 
 }  // namespace http_handler

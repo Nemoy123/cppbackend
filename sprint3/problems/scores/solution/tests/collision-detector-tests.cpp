@@ -18,6 +18,7 @@ double Random(int low, int high)
 {
     std::uniform_int_distribution<> dist(low, high);
     return static_cast<double> (dist(gen));
+
 }
 
 class TestClass : public ItemGathererProvider {
