@@ -41,3 +41,13 @@ add_executable(tests
 	tests/tagged_uuid_tests.cpp
 )
 target_link_libraries(tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::gtest libbookypedia)
+add_custom_command(
+        TARGET bookypedia POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_BINARY_DIR}/bin/bookypedia
+                ${CMAKE_CURRENT_BINARY_DIR}/bookypedia)
+add_custom_command(
+        TARGET tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_BINARY_DIR}/bin/tests
+                ${CMAKE_CURRENT_BINARY_DIR}/tests)
