@@ -1,0 +1,82 @@
+[33m2bed80d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: checkout: moving from review to main
+[33m6d861bd[m[33m ([m[1;31morigin/review[m[33m, [m[1;32mreview[m[33m)[m HEAD@{1}: commit: final4
+[33m2bed80d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{2}: checkout: moving from main to review
+[33m2bed80d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{3}: reset: moving to 2bed80d
+[33m0bd5593[m HEAD@{4}: reset: moving to 0bd5593
+[33mfdc1115[m HEAD@{5}: commit: final3
+[33mf2f0ad8[m HEAD@{6}: commit: final2
+[33m3301d7e[m HEAD@{7}: commit: final1
+[33m646b5ee[m HEAD@{8}: commit: move finish
+[33me49232a[m HEAD@{9}: commit: move7
+[33m9d5eff6[m HEAD@{10}: commit: move_test
+[33m319d463[m HEAD@{11}: commit: move5
+[33m3dd6332[m HEAD@{12}: commit: move v3
+[33m5e99b92[m HEAD@{13}: commit: move v2
+[33m5ea9992[m HEAD@{14}: commit: movev1
+[33mca3eff3[m HEAD@{15}: commit: state_finish
+[33m840d1b5[m HEAD@{16}: commit: game_statev1
+[33m895860d[m HEAD@{17}: commit: joinv2
+[33m59ffc22[m HEAD@{18}: commit: joinv1
+[33m0265c89[m HEAD@{19}: commit: v12
+[33m6c9795f[m HEAD@{20}: commit: v11
+[33m3f346c6[m HEAD@{21}: reset: moving to HEAD
+[33m3f346c6[m HEAD@{22}: reset: moving to HEAD
+[33m3f346c6[m HEAD@{23}: commit: v11
+[33m556e04a[m HEAD@{24}: commit: v10
+[33me36791c[m HEAD@{25}: commit: v9
+[33m9b65e19[m HEAD@{26}: commit: v8
+[33m228a963[m HEAD@{27}: commit: v7
+[33m0a65f84[m HEAD@{28}: commit: v6
+[33m30fa0a1[m HEAD@{29}: commit: v4
+[33m584a828[m HEAD@{30}: commit: v5
+[33mc2b2509[m HEAD@{31}: commit: v4
+[33m667b994[m HEAD@{32}: commit: v3
+[33m05bb3aa[m HEAD@{33}: commit: v2
+[33ma69e1a9[m HEAD@{34}: commit: server_loggingv1
+[33m223a915[m HEAD@{35}: commit: log7
+[33m28b7e51[m HEAD@{36}: commit: log6
+[33m3301043[m HEAD@{37}: commit: log5
+[33m5f07c9d[m HEAD@{38}: commit: log4
+[33md4b2173[m HEAD@{39}: commit: log3
+[33m7774a0b[m HEAD@{40}: commit: log2
+[33m0bd5593[m HEAD@{41}: commit: log1
+[33mb89a66d[m HEAD@{42}: commit: s2_v4
+[33m1da773f[m HEAD@{43}: commit: s2_v3
+[33m7aa9d94[m HEAD@{44}: commit: 2_v2
+[33mfc6044c[m HEAD@{45}: commit: 1_v1
+[33mde29261[m HEAD@{46}: pull: Fast-forward
+[33m8b4ce41[m HEAD@{47}: checkout: moving from new_br_review2 to main
+[33mc86791d[m[33m ([m[1;32mnew_br_review2[m[33m)[m HEAD@{48}: commit: sprin2_1
+[33mefaa368[m[33m ([m[1;31morigin/new_branch[m[33m, [m[1;32mnew_branch[m[33m)[m HEAD@{49}: checkout: moving from new_branch to new_br_review2
+[33mefaa368[m[33m ([m[1;31morigin/new_branch[m[33m, [m[1;32mnew_branch[m[33m)[m HEAD@{50}: commit: review2
+[33md4d5daa[m HEAD@{51}: commit: review1
+[33m8b4ce41[m HEAD@{52}: checkout: moving from main to new_branch
+[33m8b4ce41[m HEAD@{53}: reset: moving to 8b4ce41
+[33m04b7a80[m HEAD@{54}: commit: final3
+[33mc4c681d[m HEAD@{55}: commit: final2
+[33m7d714ca[m HEAD@{56}: commit: final
+[33m8b4ce41[m HEAD@{57}: commit: map5
+[33meb7c32e[m HEAD@{58}: commit: map4
+[33m5d692b7[m HEAD@{59}: commit: map4
+[33mc134f1f[m HEAD@{60}: commit: map3
+[33m02e68d1[m HEAD@{61}: commit: map2
+[33me7d433d[m HEAD@{62}: commit: mapjson add
+[33md4f1499[m HEAD@{63}: commit: async
+[33m0c2a236[m HEAD@{64}: commit: rest2
+[33m11ac95f[m HEAD@{65}: commit: coffee
+[33m0e495c8[m HEAD@{66}: commit: rest1
+[33mc8c1ac1[m HEAD@{67}: commit: syncserver2
+[33m353aeee[m HEAD@{68}: commit: syncserver
+[33m7ff3774[m HEAD@{69}: commit: Add radio
+[33m966edaf[m HEAD@{70}: commit: Cancel3
+[33mcfe1aa0[m HEAD@{71}: pull (finish): returning to refs/heads/main
+[33mcfe1aa0[m HEAD@{72}: pull (pick): Cancel2
+[33mea3c5e2[m HEAD@{73}: pull (pick): all
+[33m12013d5[m HEAD@{74}: pull (start): checkout 12013d5c0e1e47a442492066191ce2ccd9500965
+[33ma4cdf05[m HEAD@{75}: commit: Cancel2
+[33m34fbf38[m HEAD@{76}: reset: moving to 34fbf386c40436ce2c067f0b52c79f368d0e0391
+[33m34fbf38[m HEAD@{77}: commit: all
+[33mbd1b333[m HEAD@{78}: reset: moving to HEAD~1
+[33m58ec975[m HEAD@{79}: commit: all
+[33mbd1b333[m HEAD@{80}: commit: first
+[33m2bed80d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{81}: clone: from github.com:Nemoy123/cppbackend.git
