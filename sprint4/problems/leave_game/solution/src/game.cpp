@@ -72,7 +72,7 @@ void SetWaitForDog(Game* game, std::shared_ptr <Dog> dog_ptr,
                 const uint64_t time, std::vector <std::shared_ptr <Dog>>& delete_vector) {
     dog_ptr->SetTimeWaiting(dog_ptr->GetTimeWaiting() + std::chrono::milliseconds{time});
     const std::chrono::milliseconds total_time = dog_ptr->GetTimeWaiting();
-    if (total_time > game->GetRetireTime ()) {
+    if (total_time >= game->GetRetireTime ()) {
         //game->Retire(dog_ptr);
         delete_vector.push_back (dog_ptr);
         
@@ -96,14 +96,14 @@ void Game::TimeUpdate (const uint64_t time) {
         for (auto& [map_id, session] : game_sessions_) { 
             if (session->GetAllDogs().empty()) continue;
             for (auto& [dog_id, dog_ptr] : session->GetAllDogs()) { 
-                //if (dog_ptr.) continue;
+                dog_ptr->SetTimePlaying (dog_ptr->GetTimePlaying() + std::chrono::milliseconds{time});
                 const std::string* direction = &dog_ptr->GetDirection();
                 if (*direction == "" || (dog_ptr->GetSpeed().x == 0 && dog_ptr->GetSpeed().y == 0 )) {
                     SetWaitForDog (this, dog_ptr, time, delete_vector);
                     continue;
                 }
                 else if (*direction == "R" || *direction == "L")  {
-                    
+                    dog_ptr->SetTimeWaiting (0ms);
                     bool is_growing_direction = (*direction == "R") ? true : false; // тернарный оператор эфективнее присваивания через if-else
                     const Map::RoadMap* first_container = &(session->GetMap()->GetHorizontalRoads());
                     const Map::RoadMap* second_container = &(session->GetMap()->GetVerticalRoads());
@@ -139,6 +139,7 @@ void Game::TimeUpdate (const uint64_t time) {
                     }
                     else {
                         // двигаемся поперек
+                        dog_ptr->SetTimeWaiting (0ms);
                         pos_min = second_container->lower_bound ((*x_key - (max_road_offset + error_rate)));
                         if (pos_min != first_container->end() && ((pos_min->first - *x_key) < (max_road_offset + error_rate) )) { 
                             if (is_growing_direction) {
@@ -166,6 +167,7 @@ void Game::TimeUpdate (const uint64_t time) {
                     }
                 }
                 else if (*direction == "D" || *direction == "U") {
+                    dog_ptr->SetTimeWaiting (0ms);
                     bool axis = false;
                     bool is_growing_direction = (*direction == "D") ? true : false;
                     const Map::RoadMap* vert_container = &(session->GetMap()->GetVerticalRoads());
@@ -201,6 +203,7 @@ void Game::TimeUpdate (const uint64_t time) {
                     }
                     else {
                             // двигаемся поперек
+                            dog_ptr->SetTimeWaiting (0ms);
                             pos_min = horiz_container->lower_bound ((*y_key - (max_road_offset + error_rate)));
                             if (pos_min != horiz_container->end() && ((pos_min->first - *y_key) < (max_road_offset + error_rate) )) { 
                                 if (is_growing_direction) {    

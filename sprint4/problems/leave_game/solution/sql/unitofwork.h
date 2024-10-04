@@ -43,6 +43,7 @@ class UnitOfWorkShowRecords: public UnitOfWork {
         
     private:
         std::string SaveRecord (Record&& info) override {return {};}
+        
 };
 
 class UnitOfWorkSaveRecord: public UnitOfWork { 

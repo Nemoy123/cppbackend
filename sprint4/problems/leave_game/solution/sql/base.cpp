@@ -34,7 +34,7 @@ void Base::CreateTables () {
                 id UUID PRIMARY KEY,
                 name varchar(100) UNIQUE NOT NULL,
                 score integer,
-                play_time_ms integer
+                play_time_ms float
             );
         )"_zv);
     
@@ -59,7 +59,7 @@ std::string Base::SaveRecord(pqxx::work& work, Record&& info) {
             ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4
             RETURNING id;
         )"_zv,
-        util::UUIDToString(info.id), info.name, info.score, info.play_time);
+        util::UUIDToString(info.id), info.name, info.score, (info.play_time/1000));
 
     pqxx::row row = *(result_id.begin());
     std::string res_id = row.at("id").c_str();
