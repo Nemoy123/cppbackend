@@ -8,8 +8,8 @@ Base::Base(int thread_num, const std::string& url)
     : pool_(thread_num, [&url](){ 
                                 
                                 try {
-                                   pqxx::connection con {url};
-                                   return std::make_shared<pqxx::connection>(std::move(con));
+                                   //pqxx::connection con {url};
+                                   return std::make_shared<pqxx::connection>(url);
                                 } catch(const std::exception& ex) {
                                     std::cout << "connection sql not open" << std::endl;
                                     std::cout << "ENV " << url << std::endl;

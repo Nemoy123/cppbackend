@@ -1,8 +1,8 @@
 #include "unitofwork.h"
 
-std::vector <Record> UnitOfWorkShowRecords::GetRecords() {
+std::vector <Record> UnitOfWorkShowRecords::GetRecords(std::optional<int> start, std::optional<int> maxitems) {
 
-    return GetBase().ShowRecords(GetWork());
+    return GetBase().ShowRecords(GetWork(), start, maxitems);
 }
 
 UnitOfWorkShowRecords::~UnitOfWorkShowRecords () {

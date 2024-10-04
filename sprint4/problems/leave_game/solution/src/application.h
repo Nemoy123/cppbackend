@@ -93,9 +93,34 @@ class Application {
         template <typename Request, typename Send>
         void MakeInvalidMethodError (Request&& req, Send&& send, std::string_view allow_methods);
 
-
-        
+        template <typename Request, typename Send>
+        std::optional<int> FindNumTarget (Request&& req, Send&& send, const std::string& req_stroke, const std::string& key);
 };
+
+template <typename Request, typename Send>
+std::optional<int> Application::FindNumTarget (Request&& req, Send&& send, const std::string& req_stroke, const std::string& key)  {
+    auto pos = req_stroke.find(key);
+    int start = -1;
+    std::string buff{};
+    if (pos  != std::string::npos) {
+        int i = 0;
+        while ((pos + key.size() + i) < req_stroke.size() &&  std::isdigit(req_stroke.at(pos + key.size() + i))) {
+            buff.push_back (req_stroke.at(pos + key.size() + i));
+            ++i;
+        }
+        try {
+            start = std::stoi (buff);
+            return start;
+        }
+        catch (...) {
+            MakeBadRequestError (req, send);
+            return INT_MIN;
+        }
+       
+    } 
+    return std::nullopt;
+    
+}
 
 template <typename Request, typename Send>
 void Application::Records(Request&& req, Send&& send) {
@@ -103,10 +128,27 @@ void Application::Records(Request&& req, Send&& send) {
         MakeInvalidMethodError (req, send, "GET");
         return;
     }
+    std::optional<int> start;
+    std::optional<int> max_items;
+
+    if (req.target().size() > 21) {
+ 
+        auto params = req.target().substr (21);
+        std::string key {"start="};
+        start = FindNumTarget (req, send, params, key);
+        if (start == INT_MIN) return;
+        key = "maxItems="s;
+        max_items = FindNumTarget (req, send, params, key);
+        if (max_items == INT_MIN) return;
+        if (max_items.has_value() && max_items > 100) {
+            MakeBadRequestError (req, send);
+            return;
+        }
+    }
     std::vector<Record> vect;
     {
         auto tranz = game_.GetUseCases()->ShowRecordsTranz();
-        vect = tranz->GetRecords();
+        vect = tranz->GetRecords(start, max_items);
         tranz->Commit();
     }
     json::array arr;

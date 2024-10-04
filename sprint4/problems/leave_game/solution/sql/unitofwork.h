@@ -13,7 +13,7 @@ class UnitOfWork {
                     
                     {}
         virtual ~UnitOfWork() = default;
-        virtual std::vector<Record>  GetRecords() = 0;
+        virtual std::vector<Record>  GetRecords(std::optional<int> start, std::optional<int> maxitems) = 0;
         virtual std::string SaveRecord (Record&& info) = 0;
 
         sql::ConnectionPool::ConnectionWrapper& GetConnection ();
@@ -39,12 +39,10 @@ class UnitOfWorkShowRecords: public UnitOfWork {
                     {}
         ~UnitOfWorkShowRecords () override;
 
-        std::vector<Record> GetRecords() override;
+        std::vector<Record> GetRecords(std::optional<int> start, std::optional<int> maxitems) override;
         
     private:
         std::string SaveRecord (Record&& info) override {return {};}
-        //pqxx::work work_;
-
 };
 
 class UnitOfWorkSaveRecord: public UnitOfWork { 
@@ -60,9 +58,7 @@ class UnitOfWorkSaveRecord: public UnitOfWork {
         
         
     private:
-        std::vector<Record> GetRecords() override {return {};}
-        //pqxx::work work_;
-
+        std::vector<Record> GetRecords(std::optional<int> start, std::optional<int> maxitems) override {return {};}
 };
 
 

@@ -158,7 +158,7 @@ void RequestHandler::ApiHandler (Request&& req, Send&& send) {
             return;
         }
         
-        else if (req.target() == ("/api/v1/game/records"))  {
+        else if (req.target().starts_with ("/api/v1/game/records"))  {
             application.Records(req, send);
             return;
         }
